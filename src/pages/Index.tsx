@@ -27,6 +27,11 @@ const generoLabel: Record<string, string> = {
   bi: "Bissexual",
 };
 
+function formatDate(dateStr: string): string {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  return `${String(day).padStart(2, "0")}/${String(month).padStart(2, "0")}/${year}`;
+}
+
 export default function Index() {
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
