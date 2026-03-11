@@ -94,7 +94,7 @@ export default function Index() {
           <div className="flex items-center gap-3">
             <img src={logo} alt="Conecta Ads" className="h-10" />
             <div className="h-8 w-px bg-border" />
-            <span className="text-lg text-foreground font-bold">Gestão Humana</span>
+            <span className="text-lg text-foreground font-bold">Hub de Gestão Humana</span>
           </div>
         </div>
       </header>
