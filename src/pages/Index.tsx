@@ -27,6 +27,11 @@ const generoLabel: Record<string, string> = {
   bi: "Bissexual",
 };
 
+function formatDate(dateStr: string): string {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  return `${String(day).padStart(2, "0")}/${String(month).padStart(2, "0")}/${year}`;
+}
+
 export default function Index() {
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -144,7 +149,7 @@ export default function Index() {
                     <TableCell>{generoLabel[c.genero] || c.genero}</TableCell>
                     <TableCell>{c.setor}</TableCell>
                     <TableCell>{c.cargo}</TableCell>
-                    <TableCell>{new Date(c.data_admissao).toLocaleDateString("pt-BR")}</TableCell>
+                    <TableCell>{formatDate(c.data_admissao)}</TableCell>
                     <TableCell>{c.idade}</TableCell>
                     <TableCell>
                       <div className="flex items-center justify-center gap-1">
