@@ -14,7 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      colaboradores: {
+        Row: {
+          cargo: string
+          created_at: string
+          data_admissao: string
+          documento: string
+          genero: string
+          id: string
+          idade: number
+          nome_completo: string
+          setor: string
+          sexo: string
+        }
+        Insert: {
+          cargo: string
+          created_at?: string
+          data_admissao: string
+          documento: string
+          genero: string
+          id?: string
+          idade: number
+          nome_completo: string
+          setor: string
+          sexo: string
+        }
+        Update: {
+          cargo?: string
+          created_at?: string
+          data_admissao?: string
+          documento?: string
+          genero?: string
+          id?: string
+          idade?: number
+          nome_completo?: string
+          setor?: string
+          sexo?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
