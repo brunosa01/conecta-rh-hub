@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,27 +7,50 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+export type ColaboradorForm = {
+  nome_completo: string;
+  documento: string;
+  genero: string;
+  sexo: string;
+  setor: string;
+  cargo: string;
+  data_admissao: string;
+  idade: string;
+};
+
+const emptyForm: ColaboradorForm = {
+  nome_completo: "",
+  documento: "",
+  genero: "",
+  sexo: "",
+  setor: "",
+  cargo: "",
+  data_admissao: "",
+  idade: "",
+};
+
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  editingId?: string | null;
+  initialData?: ColaboradorForm | null;
 }
 
-export function AddColaboradorDialog({ open, onOpenChange, onSuccess }: Props) {
+export function ColaboradorDialog({ open, onOpenChange, onSuccess, editingId, initialData }: Props) {
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({
-    nome_completo: "",
-    documento: "",
-    genero: "",
-    sexo: "",
-    setor: "",
-    cargo: "",
-    data_admissao: "",
-    idade: "",
-  });
+  const [form, setForm] = useState<ColaboradorForm>(emptyForm);
+
+  useEffect(() => {
+    if (open) {
+      setForm(initialData || emptyForm);
+    }
+  }, [open, initialData]);
 
   const update = (field: string, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
+
+  const isEditing = !!editingId;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,16 +59,17 @@ export function AddColaboradorDialog({ open, onOpenChange, onSuccess }: Props) {
       return;
     }
     setLoading(true);
-    const { error } = await supabase.from("colaboradores").insert({
-      ...form,
-      idade: parseInt(form.idade),
-    });
+    const payload = { ...form, idade: parseInt(form.idade) };
+
+    const { error } = isEditing
+      ? await supabase.from("colaboradores").update(payload).eq("id", editingId)
+      : await supabase.from("colaboradores").insert(payload);
+
     setLoading(false);
     if (error) {
-      toast.error("Erro ao cadastrar: " + error.message);
+      toast.error(`Erro ao ${isEditing ? "atualizar" : "cadastrar"}: ${error.message}`);
     } else {
-      toast.success("Colaborador cadastrado com sucesso!");
-      setForm({ nome_completo: "", documento: "", genero: "", sexo: "", setor: "", cargo: "", data_admissao: "", idade: "" });
+      toast.success(`Colaborador ${isEditing ? "atualizado" : "cadastrado"} com sucesso!`);
       onOpenChange(false);
       onSuccess();
     }
@@ -55,7 +79,9 @@ export function AddColaboradorDialog({ open, onOpenChange, onSuccess }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Novo Colaborador</DialogTitle>
+          <DialogTitle className="text-xl font-bold">
+            {isEditing ? "Editar Colaborador" : "Novo Colaborador"}
+          </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid gap-4 pt-2">
           <div className="grid gap-2">
@@ -111,7 +137,7 @@ export function AddColaboradorDialog({ open, onOpenChange, onSuccess }: Props) {
             <Input id="admissao" type="date" value={form.data_admissao} onChange={(e) => update("data_admissao", e.target.value)} />
           </div>
           <Button type="submit" disabled={loading} className="w-full mt-2">
-            {loading ? "Salvando..." : "Cadastrar Colaborador"}
+            {loading ? "Salvando..." : isEditing ? "Salvar Alterações" : "Cadastrar Colaborador"}
           </Button>
         </form>
       </DialogContent>

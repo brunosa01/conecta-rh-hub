@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AddColaboradorDialog } from "@/components/AddColaboradorDialog";
-import { UserPlus, Users } from "lucide-react";
+import { ColaboradorDialog, ColaboradorForm } from "@/components/AddColaboradorDialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { UserPlus, Users, Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import logo from "@/assets/logo-conecta-ads.png";
 
 type Colaborador = {
@@ -29,6 +31,9 @@ export default function Index() {
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingData, setEditingData] = useState<ColaboradorForm | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const fetchColaboradores = async () => {
     setLoading(true);
@@ -44,9 +49,41 @@ export default function Index() {
     fetchColaboradores();
   }, []);
 
+  const handleEdit = (c: Colaborador) => {
+    setEditingId(c.id);
+    setEditingData({
+      nome_completo: c.nome_completo,
+      documento: c.documento,
+      genero: c.genero,
+      sexo: c.sexo,
+      setor: c.setor,
+      cargo: c.cargo,
+      data_admissao: c.data_admissao,
+      idade: String(c.idade),
+    });
+    setDialogOpen(true);
+  };
+
+  const handleAdd = () => {
+    setEditingId(null);
+    setEditingData(null);
+    setDialogOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    const { error } = await supabase.from("colaboradores").delete().eq("id", deleteId);
+    if (error) {
+      toast.error("Erro ao excluir: " + error.message);
+    } else {
+      toast.success("Colaborador excluído com sucesso!");
+      fetchColaboradores();
+    }
+    setDeleteId(null);
+  };
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="border-b border-border bg-card px-6 py-4">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
           <div className="flex items-center gap-3">
@@ -57,7 +94,6 @@ export default function Index() {
         </div>
       </header>
 
-      {/* Content */}
       <main className="mx-auto max-w-7xl px-6 py-8">
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -67,7 +103,7 @@ export default function Index() {
               {colaboradores.length}
             </span>
           </div>
-          <Button onClick={() => setDialogOpen(true)} className="gap-2">
+          <Button onClick={handleAdd} className="gap-2">
             <UserPlus className="h-4 w-4" />
             Adicionar Colaborador
           </Button>
@@ -96,6 +132,7 @@ export default function Index() {
                   <TableHead>Cargo</TableHead>
                   <TableHead>Admissão</TableHead>
                   <TableHead>Idade</TableHead>
+                  <TableHead className="w-24 text-center">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -109,6 +146,16 @@ export default function Index() {
                     <TableCell>{c.cargo}</TableCell>
                     <TableCell>{new Date(c.data_admissao).toLocaleDateString("pt-BR")}</TableCell>
                     <TableCell>{c.idade}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center justify-center gap-1">
+                        <Button variant="ghost" size="icon" onClick={() => handleEdit(c)} className="h-8 w-8 text-muted-foreground hover:text-primary">
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => setDeleteId(c.id)} className="h-8 w-8 text-muted-foreground hover:text-destructive">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -117,11 +164,30 @@ export default function Index() {
         </div>
       </main>
 
-      <AddColaboradorDialog
+      <ColaboradorDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         onSuccess={fetchColaboradores}
+        editingId={editingId}
+        initialData={editingData}
       />
+
+      <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir colaborador?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita. O colaborador será removido permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
