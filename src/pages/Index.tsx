@@ -144,7 +144,7 @@ export default function Index() {
                     <TableCell>{generoLabel[c.genero] || c.genero}</TableCell>
                     <TableCell>{c.setor}</TableCell>
                     <TableCell>{c.cargo}</TableCell>
-                    <TableCell>{new Date(c.data_admissao).toLocaleDateString("pt-BR")}</TableCell>
+                    <TableCell>{formatDate(c.data_admissao)}</TableCell>
                     <TableCell>{c.idade}</TableCell>
                     <TableCell>
                       <div className="flex items-center justify-center gap-1">
