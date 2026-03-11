@@ -24,7 +24,7 @@ const generoLabel: Record<string, string> = {
   hetero: "Heterossexual",
   homo: "Homossexual",
   pan: "Pansexual",
-  bi: "Bissexual",
+  bi: "Bissexual"
 };
 
 function formatDate(dateStr: string): string {
@@ -42,11 +42,11 @@ export default function Index() {
 
   const fetchColaboradores = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from("colaboradores")
-      .select("*")
-      .order("nome_completo");
-    setColaboradores((data as Colaborador[]) || []);
+    const { data } = await supabase.
+    from("colaboradores").
+    select("*").
+    order("nome_completo");
+    setColaboradores(data as Colaborador[] || []);
     setLoading(false);
   };
 
@@ -64,7 +64,7 @@ export default function Index() {
       setor: c.setor,
       cargo: c.cargo,
       data_admissao: c.data_admissao,
-      idade: String(c.idade),
+      idade: String(c.idade)
     });
     setDialogOpen(true);
   };
@@ -94,7 +94,7 @@ export default function Index() {
           <div className="flex items-center gap-3">
             <img src={logo} alt="Conecta Ads" className="h-10" />
             <div className="h-8 w-px bg-border" />
-            <span className="text-lg font-semibold text-foreground">Gestão Humana</span>
+            <span className="text-lg text-foreground font-bold">Gestão Humana</span>
           </div>
         </div>
       </header>
@@ -115,18 +115,18 @@ export default function Index() {
         </div>
 
         <div className="rounded-xl border border-border bg-card shadow-sm">
-          {loading ? (
-            <div className="flex items-center justify-center py-20 text-muted-foreground">
+          {loading ?
+          <div className="flex items-center justify-center py-20 text-muted-foreground">
               Carregando...
-            </div>
-          ) : colaboradores.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+            </div> :
+          colaboradores.length === 0 ?
+          <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
               <Users className="mb-3 h-12 w-12 opacity-30" />
               <p className="text-lg font-medium">Nenhum colaborador cadastrado</p>
               <p className="text-sm">Clique em "Adicionar Colaborador" para começar</p>
-            </div>
-          ) : (
-            <Table>
+            </div> :
+
+          <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Nome</TableHead>
@@ -141,8 +141,8 @@ export default function Index() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {colaboradores.map((c) => (
-                  <TableRow key={c.id}>
+                {colaboradores.map((c) =>
+              <TableRow key={c.id}>
                     <TableCell className="font-medium">{c.nome_completo}</TableCell>
                     <TableCell>{c.documento}</TableCell>
                     <TableCell className="capitalize">{c.sexo}</TableCell>
@@ -162,10 +162,10 @@ export default function Index() {
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+              )}
               </TableBody>
             </Table>
-          )}
+          }
         </div>
       </main>
 
@@ -174,8 +174,8 @@ export default function Index() {
         onOpenChange={setDialogOpen}
         onSuccess={fetchColaboradores}
         editingId={editingId}
-        initialData={editingData}
-      />
+        initialData={editingData} />
+      
 
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent>
@@ -193,6 +193,6 @@ export default function Index() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
-  );
+    </div>);
+
 }
