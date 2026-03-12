@@ -6,7 +6,7 @@ import { ColaboradorDialog, ColaboradorForm } from "@/components/AddColaboradorD
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { UserPlus, Users, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import logo from "@/assets/logo-conecta-ads.png";
+
 
 type Colaborador = {
   id: string;
