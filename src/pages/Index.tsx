@@ -88,16 +88,7 @@ export default function Index() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card px-6 py-4">
-        <div className="mx-auto flex max-w-7xl items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img src={logo} alt="Conecta Ads" className="h-10" />
-            <div className="h-8 w-px bg-border" />
-            <span className="text-lg text-foreground font-bold">Hub de Gestão Humana</span>
-          </div>
-        </div>
-      </header>
+    <div className="bg-background">
 
       <main className="mx-auto max-w-7xl px-6 py-8">
         <div className="mb-6 flex items-center justify-between">
