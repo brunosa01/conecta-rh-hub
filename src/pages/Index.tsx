@@ -65,7 +65,8 @@ export default function Index() {
       setor: c.setor,
       cargo: c.cargo,
       data_admissao: c.data_admissao,
-      idade: String(c.idade)
+      idade: String(c.idade),
+      escolaridade: c.escolaridade
     });
     setDialogOpen(true);
   };
