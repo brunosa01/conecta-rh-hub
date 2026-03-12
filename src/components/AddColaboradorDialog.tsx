@@ -16,6 +16,7 @@ export type ColaboradorForm = {
   cargo: string;
   data_admissao: string;
   idade: string;
+  escolaridade: string;
 };
 
 const emptyForm: ColaboradorForm = {
@@ -27,7 +28,18 @@ const emptyForm: ColaboradorForm = {
   cargo: "",
   data_admissao: "",
   idade: "",
+  escolaridade: "",
 };
+
+const escolaridadeOptions = [
+  { group: "Fundamental", items: ["Fundamental Incompleto", "Fundamental Cursando", "Fundamental Completo"] },
+  { group: "Médio", items: ["Médio Incompleto", "Médio Cursando", "Médio Completo"] },
+  { group: "Superior", items: ["Superior Incompleto", "Superior Cursando", "Superior Completo"] },
+  { group: "Pós-Graduação", items: ["Pós-Graduação Cursando", "Pós-Graduação Completo"] },
+  { group: "Mestrado", items: ["Mestrado Cursando", "Mestrado Completo"] },
+  { group: "Doutorado", items: ["Doutorado Cursando", "Doutorado Completo"] },
+  { group: "MBA", items: ["MBA Cursando", "MBA Completo"] },
+];
 
 interface Props {
   open: boolean;
