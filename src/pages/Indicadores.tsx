@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { BarChart3, Users } from "lucide-react";
+import { BarChart3, Users, Clock, Cake } from "lucide-react";
 import {
   PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid,
 } from "recharts";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type Colaborador = {
   id: string;
@@ -26,11 +27,11 @@ const generoLabel: Record<string, string> = {
 };
 
 const PIE_COLORS = [
-  "hsl(263, 83%, 58%)",  // primary purple
-  "hsl(220, 14%, 76%)",  // muted gray
-  "hsl(263, 60%, 72%)",  // light purple
-  "hsl(340, 65%, 60%)",  // pink accent
-  "hsl(200, 60%, 55%)",  // blue accent
+  "hsl(263, 83%, 58%)",
+  "hsl(220, 14%, 76%)",
+  "hsl(263, 60%, 72%)",
+  "hsl(340, 65%, 60%)",
+  "hsl(200, 60%, 55%)",
 ];
 
 const BAR_COLORS = {
@@ -52,8 +53,58 @@ function renderCustomLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent
 }
 
 const indicators = [
-  { id: "genero", title: "Gênero", icon: Users },
+  { id: "genero", title: "Gênero", subtitle: "Diversidade e inclusão", icon: Users },
+  { id: "tempo", title: "Tempo de Casa", subtitle: "Permanência e aniversários", icon: Clock },
 ];
+
+function parseLocalDate(dateStr: string) {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  return { year, month, day };
+}
+
+function calcTenure(admissao: string, ref: Date) {
+  const { year, month, day } = parseLocalDate(admissao);
+  let years = ref.getFullYear() - year;
+  let months = ref.getMonth() + 1 - month;
+  if (ref.getDate() < day) months--;
+  if (months < 0) { years--; months += 12; }
+  return { years, months, totalMonths: years * 12 + months };
+}
+
+function formatTenure(years: number, months: number) {
+  const yPart = years > 0 ? `${years} ano${years !== 1 ? "s" : ""}` : "";
+  const mPart = months > 0 ? `${months} ${months !== 1 ? "meses" : "mês"}` : "";
+  if (yPart && mPart) return `${yPart} e ${mPart}`;
+  if (yPart) return yPart;
+  if (mPart) return mPart;
+  return "Menos de 1 mês";
+}
+
+type Aniversariante = Colaborador & { anosCompletando: number };
+
+function getAniversariantes(colaboradores: Colaborador[], targetMonth: number, targetYear: number): Aniversariante[] {
+  return colaboradores
+    .filter((c) => {
+      const { month } = parseLocalDate(c.data_admissao);
+      return month === targetMonth;
+    })
+    .map((c) => {
+      const { year } = parseLocalDate(c.data_admissao);
+      return { ...c, anosCompletando: targetYear - year };
+    })
+    .sort((a, b) => {
+      const da = parseLocalDate(a.data_admissao).day;
+      const db = parseLocalDate(b.data_admissao).day;
+      return da - db;
+    });
+}
+
+function formatDateBR(dateStr: string) {
+  const { year, month, day } = parseLocalDate(dateStr);
+  return `${String(day).padStart(2, "0")}/${String(month).padStart(2, "0")}/${year}`;
+}
+
+const MONTH_NAMES = ["", "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 
 export default function Indicadores() {
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
@@ -70,7 +121,7 @@ export default function Indicadores() {
     fetch();
   }, []);
 
-  // --- Data for charts ---
+  // --- Gênero chart data ---
   const sexoData = (() => {
     const counts: Record<string, number> = {};
     colaboradores.forEach((c) => {
@@ -98,6 +149,49 @@ export default function Indicadores() {
     });
     return Object.entries(map).map(([setor, vals]) => ({ setor, ...vals }));
   })();
+
+  // --- Tempo de Casa data ---
+  const now = new Date();
+  const currentMonth = now.getMonth() + 1;
+  const currentYear = now.getFullYear();
+  const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
+  const nextMonthYear = currentMonth === 12 ? currentYear + 1 : currentYear;
+
+  const avgTenure = (() => {
+    if (colaboradores.length === 0) return { years: 0, months: 0 };
+    const total = colaboradores.reduce((sum, c) => sum + calcTenure(c.data_admissao, now).totalMonths, 0);
+    const avg = Math.round(total / colaboradores.length);
+    return { years: Math.floor(avg / 12), months: avg % 12 };
+  })();
+
+  const anivThisMonth = getAniversariantes(colaboradores, currentMonth, currentYear);
+  const anivNextMonth = getAniversariantes(colaboradores, nextMonth, nextMonthYear);
+
+  const AniversarianteList = ({ list }: { list: Aniversariante[] }) => {
+    if (list.length === 0) {
+      return (
+        <p className="py-8 text-center text-sm text-muted-foreground">
+          Nenhum aniversariante neste período
+        </p>
+      );
+    }
+    return (
+      <div className="grid gap-3 sm:grid-cols-2">
+        {list.map((a) => (
+          <div key={a.id} className="rounded-lg border border-border bg-card p-4 shadow-sm">
+            <p className="font-semibold text-foreground">{a.nome_completo}</p>
+            <p className="text-sm text-muted-foreground">{a.setor} · {a.cargo}</p>
+            <div className="mt-2 flex items-center justify-between">
+              <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+                {a.anosCompletando} ano{a.anosCompletando !== 1 ? "s" : ""} de casa
+              </span>
+              <span className="text-xs text-muted-foreground">{formatDateBR(a.data_admissao)}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className="bg-background">
@@ -129,14 +223,14 @@ export default function Indicadores() {
                 </div>
                 <div>
                   <p className="font-semibold text-foreground">{ind.title}</p>
-                  <p className="text-xs text-muted-foreground">Diversidade e inclusão</p>
+                  <p className="text-xs text-muted-foreground">{ind.subtitle}</p>
                 </div>
               </button>
             );
           })}
         </div>
 
-        {/* Charts area */}
+        {/* Charts / content area */}
         {loading ? (
           <div className="flex items-center justify-center py-20 text-muted-foreground">
             Carregando dados...
@@ -148,7 +242,6 @@ export default function Indicadores() {
           </div>
         ) : selected === "genero" ? (
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            {/* Chart 1 - Sexo */}
             <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
               <h2 className="mb-4 text-base font-semibold text-foreground">Diversidade por Sexo</h2>
               {sexoData.length === 0 ? (
@@ -156,15 +249,7 @@ export default function Indicadores() {
               ) : (
                 <ResponsiveContainer width="100%" height={280}>
                   <PieChart>
-                    <Pie
-                      data={sexoData}
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={100}
-                      labelLine={false}
-                      label={renderCustomLabel}
-                      dataKey="value"
-                    >
+                    <Pie data={sexoData} cx="50%" cy="50%" outerRadius={100} labelLine={false} label={renderCustomLabel} dataKey="value">
                       {sexoData.map((_, i) => (
                         <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
                       ))}
@@ -176,7 +261,6 @@ export default function Indicadores() {
               )}
             </div>
 
-            {/* Chart 2 - Gênero */}
             <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
               <h2 className="mb-4 text-base font-semibold text-foreground">Diversidade por Gênero</h2>
               {generoData.length === 0 ? (
@@ -184,15 +268,7 @@ export default function Indicadores() {
               ) : (
                 <ResponsiveContainer width="100%" height={280}>
                   <PieChart>
-                    <Pie
-                      data={generoData}
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={100}
-                      labelLine={false}
-                      label={renderCustomLabel}
-                      dataKey="value"
-                    >
+                    <Pie data={generoData} cx="50%" cy="50%" outerRadius={100} labelLine={false} label={renderCustomLabel} dataKey="value">
                       {generoData.map((_, i) => (
                         <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
                       ))}
@@ -204,7 +280,6 @@ export default function Indicadores() {
               )}
             </div>
 
-            {/* Chart 3 - Sexo por Setor */}
             <div className="rounded-xl border border-border bg-card p-6 shadow-sm lg:col-span-2">
               <h2 className="mb-4 text-base font-semibold text-foreground">Diversidade de Sexo por Setor</h2>
               {sexoPorSetorData.length === 0 ? (
@@ -222,6 +297,46 @@ export default function Indicadores() {
                   </BarChart>
                 </ResponsiveContainer>
               )}
+            </div>
+          </div>
+        ) : selected === "tempo" ? (
+          <div className="space-y-6">
+            {/* Section 1 — Média de Tempo de Casa */}
+            <div className="rounded-xl border-l-4 border-l-primary border border-border bg-card p-6 shadow-sm">
+              <h2 className="mb-1 text-base font-semibold text-foreground">Média de Tempo de Casa</h2>
+              <p className="mb-4 text-xs text-muted-foreground">Média geral dos colaboradores ativos</p>
+              {colaboradores.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Sem dados</p>
+              ) : (
+                <p className="text-3xl font-bold text-primary">
+                  {formatTenure(avgTenure.years, avgTenure.months)}
+                </p>
+              )}
+            </div>
+
+            {/* Section 2 — Aniversariantes da Casa */}
+            <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+              <div className="mb-4 flex items-center gap-2">
+                <Cake className="h-5 w-5 text-primary" />
+                <h2 className="text-base font-semibold text-foreground">Aniversariantes da Casa</h2>
+              </div>
+
+              <Tabs defaultValue="this">
+                <TabsList className="mb-4">
+                  <TabsTrigger value="this">
+                    Este mês — {MONTH_NAMES[currentMonth]}
+                  </TabsTrigger>
+                  <TabsTrigger value="next">
+                    Próximo mês — {MONTH_NAMES[nextMonth]}
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent value="this">
+                  <AniversarianteList list={anivThisMonth} />
+                </TabsContent>
+                <TabsContent value="next">
+                  <AniversarianteList list={anivNextMonth} />
+                </TabsContent>
+              </Tabs>
             </div>
           </div>
         ) : null}
