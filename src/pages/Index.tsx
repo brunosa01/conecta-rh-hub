@@ -145,6 +145,7 @@ export default function Index() {
                     <TableCell>{c.cargo}</TableCell>
                     <TableCell>{formatDate(c.data_admissao)}</TableCell>
                     <TableCell>{c.idade}</TableCell>
+                    <TableCell>{c.escolaridade}</TableCell>
                     <TableCell>
                       <div className="flex items-center justify-center gap-1">
                         <Button variant="ghost" size="icon" onClick={() => handleEdit(c)} className="h-8 w-8 text-muted-foreground hover:text-primary">
