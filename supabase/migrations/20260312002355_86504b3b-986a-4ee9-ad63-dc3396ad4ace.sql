@@ -1,0 +1,1 @@
+ALTER TABLE public.colaboradores ADD COLUMN escolaridade text NOT NULL DEFAULT '';

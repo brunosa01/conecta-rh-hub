@@ -20,6 +20,7 @@ export type Database = {
           created_at: string
           data_admissao: string
           documento: string
+          escolaridade: string
           genero: string
           id: string
           idade: number
@@ -32,6 +33,7 @@ export type Database = {
           created_at?: string
           data_admissao: string
           documento: string
+          escolaridade?: string
           genero: string
           id?: string
           idade: number
@@ -44,6 +46,7 @@ export type Database = {
           created_at?: string
           data_admissao?: string
           documento?: string
+          escolaridade?: string
           genero?: string
           id?: string
           idade?: number
