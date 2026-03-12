@@ -130,6 +130,7 @@ export default function Index() {
                   <TableHead>Cargo</TableHead>
                   <TableHead>Admissão</TableHead>
                   <TableHead>Idade</TableHead>
+                  <TableHead>Escolaridade</TableHead>
                   <TableHead className="w-24 text-center">Ações</TableHead>
                 </TableRow>
               </TableHeader>
