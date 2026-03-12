@@ -66,7 +66,7 @@ export function ColaboradorDialog({ open, onOpenChange, onSuccess, editingId, in
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.nome_completo || !form.documento || !form.genero || !form.sexo || !form.setor || !form.cargo || !form.data_admissao || !form.idade) {
+    if (!form.nome_completo || !form.documento || !form.genero || !form.sexo || !form.setor || !form.cargo || !form.data_admissao || !form.idade || !form.escolaridade) {
       toast.error("Preencha todos os campos");
       return;
     }
