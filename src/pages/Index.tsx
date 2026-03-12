@@ -18,6 +18,7 @@ type Colaborador = {
   cargo: string;
   data_admissao: string;
   idade: number;
+  escolaridade: string;
 };
 
 const generoLabel: Record<string, string> = {
@@ -64,7 +65,8 @@ export default function Index() {
       setor: c.setor,
       cargo: c.cargo,
       data_admissao: c.data_admissao,
-      idade: String(c.idade)
+      idade: String(c.idade),
+      escolaridade: c.escolaridade
     });
     setDialogOpen(true);
   };
@@ -128,6 +130,7 @@ export default function Index() {
                   <TableHead>Cargo</TableHead>
                   <TableHead>Admissão</TableHead>
                   <TableHead>Idade</TableHead>
+                  <TableHead>Escolaridade</TableHead>
                   <TableHead className="w-24 text-center">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -142,6 +145,7 @@ export default function Index() {
                     <TableCell>{c.cargo}</TableCell>
                     <TableCell>{formatDate(c.data_admissao)}</TableCell>
                     <TableCell>{c.idade}</TableCell>
+                    <TableCell>{c.escolaridade}</TableCell>
                     <TableCell>
                       <div className="flex items-center justify-center gap-1">
                         <Button variant="ghost" size="icon" onClick={() => handleEdit(c)} className="h-8 w-8 text-muted-foreground hover:text-primary">
