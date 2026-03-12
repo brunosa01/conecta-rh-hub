@@ -148,6 +148,22 @@ export function ColaboradorDialog({ open, onOpenChange, onSuccess, editingId, in
             <Label htmlFor="admissao">Data de Admissão</Label>
             <Input id="admissao" type="date" value={form.data_admissao} onChange={(e) => update("data_admissao", e.target.value)} />
           </div>
+          <div className="grid gap-2">
+            <Label>Escolaridade</Label>
+            <Select value={form.escolaridade} onValueChange={(v) => update("escolaridade", v)}>
+              <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+              <SelectContent>
+                {escolaridadeOptions.map((group) => (
+                  <SelectGroup key={group.group}>
+                    <SelectLabel>{group.group}</SelectLabel>
+                    {group.items.map((item) => (
+                      <SelectItem key={item} value={item}>{item}</SelectItem>
+                    ))}
+                  </SelectGroup>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <Button type="submit" disabled={loading} className="w-full mt-2">
             {loading ? "Salvando..." : isEditing ? "Salvar Alterações" : "Cadastrar Colaborador"}
           </Button>
