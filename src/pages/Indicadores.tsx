@@ -17,6 +17,8 @@ type Colaborador = {
   cargo: string;
   data_admissao: string;
   idade: number;
+  status: string;
+  employment_periods: any;
 };
 
 const generoLabel: Record<string, string> = {
@@ -121,10 +123,13 @@ export default function Indicadores() {
     fetch();
   }, []);
 
-  // --- Gênero chart data ---
+  // Inactive collaborators are excluded from all indicators except average tenure in Tempo de Casa
+  const activeColaboradores = colaboradores.filter((c) => c.status === "active");
+
+  // --- Gênero chart data (active only) ---
   const sexoData = (() => {
     const counts: Record<string, number> = {};
-    colaboradores.forEach((c) => {
+    activeColaboradores.forEach((c) => {
       const label = c.sexo.charAt(0).toUpperCase() + c.sexo.slice(1);
       counts[label] = (counts[label] || 0) + 1;
     });
@@ -133,7 +138,7 @@ export default function Indicadores() {
 
   const generoData = (() => {
     const counts: Record<string, number> = {};
-    colaboradores.forEach((c) => {
+    activeColaboradores.forEach((c) => {
       const label = generoLabel[c.genero] || c.genero;
       counts[label] = (counts[label] || 0) + 1;
     });
@@ -142,7 +147,7 @@ export default function Indicadores() {
 
   const sexoPorSetorData = (() => {
     const map: Record<string, { masculino: number; feminino: number }> = {};
-    colaboradores.forEach((c) => {
+    activeColaboradores.forEach((c) => {
       if (!map[c.setor]) map[c.setor] = { masculino: 0, feminino: 0 };
       if (c.sexo.toLowerCase() === "masculino") map[c.setor].masculino++;
       else if (c.sexo.toLowerCase() === "feminino") map[c.setor].feminino++;
@@ -157,15 +162,37 @@ export default function Indicadores() {
   const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
   const nextMonthYear = currentMonth === 12 ? currentYear + 1 : currentYear;
 
+  // Average tenure includes ALL collaborators (active use current period, inactive use completed periods)
   const avgTenure = (() => {
     if (colaboradores.length === 0) return { years: 0, months: 0 };
-    const total = colaboradores.reduce((sum, c) => sum + calcTenure(c.data_admissao, now).totalMonths, 0);
-    const avg = Math.round(total / colaboradores.length);
+    let totalMonths = 0;
+    let count = 0;
+    colaboradores.forEach((c) => {
+      const periods: any[] = Array.isArray((c as any).employment_periods) ? (c as any).employment_periods : [];
+      if (c.status === "active") {
+        // Active: tenure from current admission date to now
+        totalMonths += calcTenure(c.data_admissao, now).totalMonths;
+        count++;
+      } else {
+        // Inactive: sum all completed periods
+        periods.forEach((p: any) => {
+          if (p.admissionDate && p.dismissalDate) {
+            const start = new Date(p.admissionDate + "T00:00:00");
+            const end = new Date(p.dismissalDate + "T00:00:00");
+            totalMonths += calcTenure(p.admissionDate, end).totalMonths;
+            count++;
+          }
+        });
+      }
+    });
+    if (count === 0) return { years: 0, months: 0 };
+    const avg = Math.round(totalMonths / count);
     return { years: Math.floor(avg / 12), months: avg % 12 };
   })();
 
-  const anivThisMonth = getAniversariantes(colaboradores, currentMonth, currentYear);
-  const anivNextMonth = getAniversariantes(colaboradores, nextMonth, nextMonthYear);
+  // Aniversariantes: active collaborators only
+  const anivThisMonth = getAniversariantes(activeColaboradores, currentMonth, currentYear);
+  const anivNextMonth = getAniversariantes(activeColaboradores, nextMonth, nextMonthYear);
 
   const AniversarianteList = ({ list }: { list: Aniversariante[] }) => {
     if (list.length === 0) {
