@@ -20,6 +20,7 @@ export type Database = {
           created_at: string
           data_admissao: string
           documento: string
+          employment_periods: Json
           escolaridade: string
           genero: string
           id: string
@@ -27,12 +28,14 @@ export type Database = {
           nome_completo: string
           setor: string
           sexo: string
+          status: string
         }
         Insert: {
           cargo: string
           created_at?: string
           data_admissao: string
           documento: string
+          employment_periods?: Json
           escolaridade?: string
           genero: string
           id?: string
@@ -40,12 +43,14 @@ export type Database = {
           nome_completo: string
           setor: string
           sexo: string
+          status?: string
         }
         Update: {
           cargo?: string
           created_at?: string
           data_admissao?: string
           documento?: string
+          employment_periods?: Json
           escolaridade?: string
           genero?: string
           id?: string
@@ -53,6 +58,7 @@ export type Database = {
           nome_completo?: string
           setor?: string
           sexo?: string
+          status?: string
         }
         Relationships: []
       }

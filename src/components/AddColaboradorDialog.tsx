@@ -73,9 +73,19 @@ export function ColaboradorDialog({ open, onOpenChange, onSuccess, editingId, in
     setLoading(true);
     const payload = { ...form, idade: parseInt(form.idade) };
 
-    const { error } = isEditing
-      ? await supabase.from("colaboradores").update(payload).eq("id", editingId)
-      : await supabase.from("colaboradores").insert(payload);
+    if (!isEditing) {
+      // New collaborator: set status and initial employment period
+      const insertPayload = {
+        ...payload,
+        status: "active",
+        employment_periods: [
+          { admissionDate: form.data_admissao, dismissalDate: null, dismissalReason: null },
+        ],
+      };
+      var { error } = await supabase.from("colaboradores").insert(insertPayload);
+    } else {
+      var { error } = await supabase.from("colaboradores").update(payload).eq("id", editingId);
+    }
 
     setLoading(false);
     if (error) {
