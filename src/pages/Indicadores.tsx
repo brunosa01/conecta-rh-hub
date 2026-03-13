@@ -17,6 +17,8 @@ type Colaborador = {
   cargo: string;
   data_admissao: string;
   idade: number;
+  status: string;
+  employment_periods: any;
 };
 
 const generoLabel: Record<string, string> = {
