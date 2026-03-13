@@ -162,37 +162,47 @@ export default function Indicadores() {
   const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
   const nextMonthYear = currentMonth === 12 ? currentYear + 1 : currentYear;
 
-  // Average tenure includes ALL collaborators (active use current period, inactive use completed periods)
+  // Average tenure: ACTIVE collaborators only, sum ALL their employment periods
   const avgTenure = (() => {
-    if (colaboradores.length === 0) return { years: 0, months: 0 };
+    if (activeColaboradores.length === 0) return { years: 0, months: 0 };
     let totalMonths = 0;
-    let count = 0;
-    colaboradores.forEach((c) => {
-      const periods: any[] = Array.isArray((c as any).employment_periods) ? (c as any).employment_periods : [];
-      if (c.status === "active") {
-        // Active: tenure from current admission date to now
-        totalMonths += calcTenure(c.data_admissao, now).totalMonths;
-        count++;
-      } else {
-        // Inactive: sum all completed periods
-        periods.forEach((p: any) => {
-          if (p.admissionDate && p.dismissalDate) {
-            const start = new Date(p.admissionDate + "T00:00:00");
-            const end = new Date(p.dismissalDate + "T00:00:00");
-            totalMonths += calcTenure(p.admissionDate, end).totalMonths;
-            count++;
-          }
-        });
-      }
+    activeColaboradores.forEach((c) => {
+      const periods: any[] = Array.isArray(c.employment_periods) ? c.employment_periods : [];
+      let personMonths = 0;
+      periods.forEach((p: any) => {
+        if (!p.admissionDate) return;
+        if (p.dismissalDate) {
+          // Completed period
+          personMonths += calcTenure(p.admissionDate, new Date(p.dismissalDate + "T00:00:00")).totalMonths;
+        } else {
+          // Current active period
+          personMonths += calcTenure(p.admissionDate, now).totalMonths;
+        }
+      });
+      totalMonths += personMonths;
     });
-    if (count === 0) return { years: 0, months: 0 };
-    const avg = Math.round(totalMonths / count);
+    const avg = Math.round(totalMonths / activeColaboradores.length);
     return { years: Math.floor(avg / 12), months: avg % 12 };
   })();
 
-  // Aniversariantes: active collaborators only
-  const anivThisMonth = getAniversariantes(activeColaboradores, currentMonth, currentYear);
-  const anivNextMonth = getAniversariantes(activeColaboradores, nextMonth, nextMonthYear);
+  // Aniversariantes: active collaborators only, using CURRENT (most recent) employment period
+  const getCurrentAdmissionDate = (c: Colaborador): string => {
+    const periods: any[] = Array.isArray(c.employment_periods) ? c.employment_periods : [];
+    if (periods.length > 0) {
+      const last = periods[periods.length - 1];
+      if (last.admissionDate) return last.admissionDate;
+    }
+    return c.data_admissao;
+  };
+
+  const anivThisMonth = getAniversariantes(
+    activeColaboradores.map((c) => ({ ...c, data_admissao: getCurrentAdmissionDate(c) })),
+    currentMonth, currentYear
+  );
+  const anivNextMonth = getAniversariantes(
+    activeColaboradores.map((c) => ({ ...c, data_admissao: getCurrentAdmissionDate(c) })),
+    nextMonth, nextMonthYear
+  );
 
   const AniversarianteList = ({ list }: { list: Aniversariante[] }) => {
     if (list.length === 0) {
