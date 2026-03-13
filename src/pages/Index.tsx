@@ -407,7 +407,13 @@ export default function Index() {
                 type="date"
                 value={deactivateDate}
                 onChange={(e) => setDeactivateDate(e.target.value)}
+                min={deactivateTarget?.data_admissao || ""}
               />
+              {deactivateDate && deactivateTarget && deactivateDate < deactivateTarget.data_admissao && (
+                <p className="text-sm text-destructive">
+                  A data de demissão não pode ser anterior à data de admissão
+                </p>
+              )}
             </div>
             <div className="grid gap-2">
               <Label>Motivo da Demissão</Label>
