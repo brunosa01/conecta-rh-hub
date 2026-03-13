@@ -82,7 +82,7 @@ export default function Index() {
       .from("colaboradores")
       .select("*")
       .order("nome_completo");
-    setColaboradores((data as Colaborador[]) || []);
+    setColaboradores((data as unknown as Colaborador[]) || []);
     setLoading(false);
   };
 
