@@ -121,10 +121,13 @@ export default function Indicadores() {
     fetch();
   }, []);
 
-  // --- Gênero chart data ---
+  // Inactive collaborators are excluded from all indicators except average tenure in Tempo de Casa
+  const activeColaboradores = colaboradores.filter((c) => c.status === "active");
+
+  // --- Gênero chart data (active only) ---
   const sexoData = (() => {
     const counts: Record<string, number> = {};
-    colaboradores.forEach((c) => {
+    activeColaboradores.forEach((c) => {
       const label = c.sexo.charAt(0).toUpperCase() + c.sexo.slice(1);
       counts[label] = (counts[label] || 0) + 1;
     });
@@ -133,7 +136,7 @@ export default function Indicadores() {
 
   const generoData = (() => {
     const counts: Record<string, number> = {};
-    colaboradores.forEach((c) => {
+    activeColaboradores.forEach((c) => {
       const label = generoLabel[c.genero] || c.genero;
       counts[label] = (counts[label] || 0) + 1;
     });
@@ -142,7 +145,7 @@ export default function Indicadores() {
 
   const sexoPorSetorData = (() => {
     const map: Record<string, { masculino: number; feminino: number }> = {};
-    colaboradores.forEach((c) => {
+    activeColaboradores.forEach((c) => {
       if (!map[c.setor]) map[c.setor] = { masculino: 0, feminino: 0 };
       if (c.sexo.toLowerCase() === "masculino") map[c.setor].masculino++;
       else if (c.sexo.toLowerCase() === "feminino") map[c.setor].feminino++;
