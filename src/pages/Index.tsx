@@ -335,6 +335,13 @@ export default function Index() {
                       {showInactive && (
                         <TableCell>{lastDismissal?.dismissalReason || "—"}</TableCell>
                       )}
+                      {showInactive && (
+                        <TableCell>
+                          {lastDismissal?.dismissalCost != null
+                            ? `R$ ${lastDismissal.dismissalCost.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                            : "—"}
+                        </TableCell>
+                      )}
                       <TableCell>
                         <div className="flex items-center justify-center gap-1">
                           {showInactive ? (
