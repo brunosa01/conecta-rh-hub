@@ -15,6 +15,7 @@ type EmploymentPeriod = {
   admissionDate: string;
   dismissalDate: string | null;
   dismissalReason: string | null;
+  dismissalCost: number | null;
 };
 
 type Colaborador = {
