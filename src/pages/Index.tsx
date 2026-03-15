@@ -69,6 +69,7 @@ export default function Index() {
   const [dismissalReasons, setDismissalReasons] = useState(defaultDismissalReasons);
   const [addingNewReason, setAddingNewReason] = useState(false);
   const [newReasonText, setNewReasonText] = useState("");
+  const [deactivateCost, setDeactivateCost] = useState("");
 
   // Reactivation state
   const [reactivateTarget, setReactivateTarget] = useState<Colaborador | null>(null);
