@@ -197,6 +197,7 @@ export default function Index() {
       admissionDate: reactivateDate,
       dismissalDate: null,
       dismissalReason: null,
+      dismissalCost: null,
     });
 
     const { error } = await supabase
