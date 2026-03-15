@@ -128,8 +128,11 @@ export default function Index() {
     setNewReasonText("");
   };
 
+  const parsedCost = parseFloat(deactivateCost.replace(/\./g, "").replace(",", "."));
+  const isCostValid = deactivateCost !== "" && !isNaN(parsedCost) && parsedCost > 0;
+
   const confirmDeactivate = async () => {
-    if (!deactivateTarget || !deactivateDate || !deactivateReason) {
+    if (!deactivateTarget || !deactivateDate || !deactivateReason || !isCostValid) {
       toast.error("Preencha todos os campos");
       return;
     }
@@ -138,12 +141,12 @@ export default function Index() {
       ? [...deactivateTarget.employment_periods]
       : [];
 
-    // Update the last period with dismissal info
     if (periods.length > 0) {
       periods[periods.length - 1] = {
         ...periods[periods.length - 1],
         dismissalDate: deactivateDate,
         dismissalReason: deactivateReason,
+        dismissalCost: parsedCost,
       };
     }
 
