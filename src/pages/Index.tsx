@@ -123,6 +123,7 @@ export default function Index() {
     setDeactivateTarget(c);
     setDeactivateDate("");
     setDeactivateReason("");
+    setDeactivateCost("");
     setAddingNewReason(false);
     setNewReasonText("");
   };
