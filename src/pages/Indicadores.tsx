@@ -231,6 +231,45 @@ export default function Indicadores() {
     );
   };
 
+  // --- Idade & Escolaridade data (active only) ---
+  const escolaridadeData = (() => {
+    const counts: Record<string, number> = {};
+    activeColaboradores.forEach((c) => {
+      if (c.escolaridade) counts[c.escolaridade] = (counts[c.escolaridade] || 0) + 1;
+    });
+    const total = activeColaboradores.length;
+    return Object.entries(counts)
+      .map(([name, value]) => ({ name, value, percent: total > 0 ? ((value / total) * 100).toFixed(1) : "0" }))
+      .sort((a, b) => b.value - a.value);
+  })();
+
+  const avgIdadeGeral = (() => {
+    if (activeColaboradores.length === 0) return null;
+    const sum = activeColaboradores.reduce((acc, c) => acc + c.idade, 0);
+    return Math.round(sum / activeColaboradores.length);
+  })();
+
+  const idadePorSetorData = (() => {
+    const map: Record<string, { sum: number; count: number }> = {};
+    activeColaboradores.forEach((c) => {
+      if (!map[c.setor]) map[c.setor] = { sum: 0, count: 0 };
+      map[c.setor].sum += c.idade;
+      map[c.setor].count++;
+    });
+    return Object.entries(map)
+      .map(([setor, v]) => ({ setor, media: Math.round(v.sum / v.count) }))
+      .sort((a, b) => b.media - a.media);
+  })();
+
+  const avgIdadePorSexo = (() => {
+    const masc = activeColaboradores.filter((c) => c.sexo.toLowerCase() === "masculino");
+    const fem = activeColaboradores.filter((c) => c.sexo.toLowerCase() === "feminino");
+    return {
+      masculino: masc.length > 0 ? Math.round(masc.reduce((a, c) => a + c.idade, 0) / masc.length) : null,
+      feminino: fem.length > 0 ? Math.round(fem.reduce((a, c) => a + c.idade, 0) / fem.length) : null,
+    };
+  })();
+
   return (
     <div className="bg-background">
       <main className="mx-auto max-w-7xl px-6 py-8">
