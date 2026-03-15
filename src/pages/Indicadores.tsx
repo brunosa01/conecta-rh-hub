@@ -57,6 +57,7 @@ function renderCustomLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent
 const indicators = [
   { id: "genero", title: "Gênero", subtitle: "Diversidade e inclusão", icon: Users },
   { id: "tempo", title: "Tempo de Casa", subtitle: "Permanência e aniversários", icon: Clock },
+  { id: "idade-escolaridade", title: "Idade & Escolaridade", subtitle: "Formação e faixa etária", icon: GraduationCap },
 ];
 
 function parseLocalDate(dateStr: string) {
