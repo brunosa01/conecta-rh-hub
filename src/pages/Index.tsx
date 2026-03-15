@@ -307,6 +307,7 @@ export default function Index() {
                   <TableHead>Escolaridade</TableHead>
                   {showInactive && <TableHead>Demissão</TableHead>}
                   {showInactive && <TableHead>Motivo</TableHead>}
+                  {showInactive && <TableHead>Custo</TableHead>}
                   <TableHead className="w-28 text-center">Ações</TableHead>
                 </TableRow>
               </TableHeader>
