@@ -466,6 +466,22 @@ export default function Index() {
                 </div>
               )}
             </div>
+            <div className="grid gap-2">
+              <Label>Custo da Demissão (R$)</Label>
+              <Input
+                type="text"
+                inputMode="decimal"
+                placeholder="0,00"
+                value={deactivateCost}
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/[^\d,\.]/g, "");
+                  setDeactivateCost(raw);
+                }}
+              />
+              {deactivateCost !== "" && !isCostValid && (
+                <p className="text-sm text-destructive">Informe um valor válido</p>
+              )}
+            </div>
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="outline" onClick={() => setDeactivateTarget(null)}>
                 Cancelar
