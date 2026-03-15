@@ -417,6 +417,66 @@ export default function Indicadores() {
               </Tabs>
             </div>
           </div>
+        ) : selected === "idade-escolaridade" ? (
+          <div className="space-y-6">
+            <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+              <h2 className="mb-4 text-base font-semibold text-foreground">Distribuição por Escolaridade</h2>
+              {escolaridadeData.length === 0 ? (
+                <p className="py-10 text-center text-sm text-muted-foreground">Sem dados</p>
+              ) : (
+                <ResponsiveContainer width="100%" height={Math.max(280, escolaridadeData.length * 40)}>
+                  <BarChart data={escolaridadeData} layout="vertical" margin={{ left: 20, right: 40 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 14%, 90%)" />
+                    <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12 }} />
+                    <YAxis type="category" dataKey="name" width={180} tick={{ fontSize: 11 }} />
+                    <Tooltip formatter={(value: number, _name: string, props: any) => [`${value} (${props.payload.percent}%)`, "Colaboradores"]} />
+                    <Bar dataKey="value" name="Colaboradores" fill="hsl(263, 83%, 58%)" radius={[0, 4, 4, 0]}
+                      label={{ position: "right", fontSize: 11, formatter: (v: number) => v }} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+            <div className="rounded-xl border-l-4 border-l-primary border border-border bg-card p-6 shadow-sm">
+              <h2 className="mb-1 text-base font-semibold text-foreground">Média de Idade Geral</h2>
+              <p className="mb-4 text-xs text-muted-foreground">Média geral dos colaboradores ativos</p>
+              {avgIdadeGeral === null ? (
+                <p className="text-sm text-muted-foreground">Sem dados</p>
+              ) : (
+                <p className="text-3xl font-bold text-primary">{avgIdadeGeral} anos</p>
+              )}
+            </div>
+            <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+              <h2 className="mb-4 text-base font-semibold text-foreground">Média de Idade por Setor</h2>
+              {idadePorSetorData.length === 0 ? (
+                <p className="py-10 text-center text-sm text-muted-foreground">Sem dados</p>
+              ) : (
+                <ResponsiveContainer width="100%" height={Math.max(280, idadePorSetorData.length * 50)}>
+                  <BarChart data={idadePorSetorData} layout="vertical" margin={{ left: 20, right: 40 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 14%, 90%)" />
+                    <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12 }} />
+                    <YAxis type="category" dataKey="setor" width={140} tick={{ fontSize: 12 }} />
+                    <Tooltip formatter={(value: number) => [`${value} anos`, "Média"]} />
+                    <Bar dataKey="media" name="Média de Idade" fill="hsl(263, 83%, 58%)" radius={[0, 4, 4, 0]}
+                      label={{ position: "right", fontSize: 12, formatter: (v: number) => `${v} anos` }} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="rounded-xl border-l-4 border-l-primary border border-border bg-card p-6 shadow-sm">
+                <h2 className="mb-1 text-base font-semibold text-foreground">
+                  {avgIdadePorSexo.masculino !== null ? `${avgIdadePorSexo.masculino} anos` : "Sem dados"}
+                </h2>
+                <p className="text-xs text-muted-foreground">Média — Masculino</p>
+              </div>
+              <div className="rounded-xl border-l-4 border-l-primary border border-border bg-card p-6 shadow-sm">
+                <h2 className="mb-1 text-base font-semibold text-foreground">
+                  {avgIdadePorSexo.feminino !== null ? `${avgIdadePorSexo.feminino} anos` : "Sem dados"}
+                </h2>
+                <p className="text-xs text-muted-foreground">Média — Feminino</p>
+              </div>
+            </div>
+          </div>
         ) : null}
       </main>
     </div>
