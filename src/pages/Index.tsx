@@ -15,6 +15,7 @@ type EmploymentPeriod = {
   admissionDate: string;
   dismissalDate: string | null;
   dismissalReason: string | null;
+  dismissalCost: number | null;
 };
 
 type Colaborador = {
@@ -68,6 +69,7 @@ export default function Index() {
   const [dismissalReasons, setDismissalReasons] = useState(defaultDismissalReasons);
   const [addingNewReason, setAddingNewReason] = useState(false);
   const [newReasonText, setNewReasonText] = useState("");
+  const [deactivateCost, setDeactivateCost] = useState("");
 
   // Reactivation state
   const [reactivateTarget, setReactivateTarget] = useState<Colaborador | null>(null);
@@ -121,12 +123,16 @@ export default function Index() {
     setDeactivateTarget(c);
     setDeactivateDate("");
     setDeactivateReason("");
+    setDeactivateCost("");
     setAddingNewReason(false);
     setNewReasonText("");
   };
 
+  const parsedCost = parseFloat(deactivateCost.replace(/\./g, "").replace(",", "."));
+  const isCostValid = deactivateCost !== "" && !isNaN(parsedCost) && parsedCost > 0;
+
   const confirmDeactivate = async () => {
-    if (!deactivateTarget || !deactivateDate || !deactivateReason) {
+    if (!deactivateTarget || !deactivateDate || !deactivateReason || !isCostValid) {
       toast.error("Preencha todos os campos");
       return;
     }
@@ -135,12 +141,12 @@ export default function Index() {
       ? [...deactivateTarget.employment_periods]
       : [];
 
-    // Update the last period with dismissal info
     if (periods.length > 0) {
       periods[periods.length - 1] = {
         ...periods[periods.length - 1],
         dismissalDate: deactivateDate,
         dismissalReason: deactivateReason,
+        dismissalCost: parsedCost,
       };
     }
 
@@ -191,6 +197,7 @@ export default function Index() {
       admissionDate: reactivateDate,
       dismissalDate: null,
       dismissalReason: null,
+      dismissalCost: null,
     });
 
     const { error } = await supabase
@@ -301,6 +308,7 @@ export default function Index() {
                   <TableHead>Escolaridade</TableHead>
                   {showInactive && <TableHead>Demissão</TableHead>}
                   {showInactive && <TableHead>Motivo</TableHead>}
+                  {showInactive && <TableHead>Custo</TableHead>}
                   <TableHead className="w-28 text-center">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -327,6 +335,13 @@ export default function Index() {
                       )}
                       {showInactive && (
                         <TableCell>{lastDismissal?.dismissalReason || "—"}</TableCell>
+                      )}
+                      {showInactive && (
+                        <TableCell>
+                          {lastDismissal?.dismissalCost != null
+                            ? `R$ ${lastDismissal.dismissalCost.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                            : "—"}
+                        </TableCell>
                       )}
                       <TableCell>
                         <div className="flex items-center justify-center gap-1">
@@ -452,13 +467,29 @@ export default function Index() {
                 </div>
               )}
             </div>
+            <div className="grid gap-2">
+              <Label>Custo da Demissão (R$)</Label>
+              <Input
+                type="text"
+                inputMode="decimal"
+                placeholder="0,00"
+                value={deactivateCost}
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/[^\d,\.]/g, "");
+                  setDeactivateCost(raw);
+                }}
+              />
+              {deactivateCost !== "" && !isCostValid && (
+                <p className="text-sm text-destructive">Informe um valor válido</p>
+              )}
+            </div>
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="outline" onClick={() => setDeactivateTarget(null)}>
                 Cancelar
               </Button>
               <Button
                 onClick={confirmDeactivate}
-                disabled={!deactivateDate || !deactivateReason || (!!deactivateTarget && deactivateDate < deactivateTarget.data_admissao)}
+                disabled={!deactivateDate || !deactivateReason || !isCostValid || (!!deactivateTarget && deactivateDate < deactivateTarget.data_admissao)}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
                 Confirmar Demissão
