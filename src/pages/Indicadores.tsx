@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { BarChart3, Users, Clock, Cake } from "lucide-react";
+import { BarChart3, Users, Clock, Cake, GraduationCap } from "lucide-react";
 import {
   PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -17,6 +17,7 @@ type Colaborador = {
   cargo: string;
   data_admissao: string;
   idade: number;
+  escolaridade: string;
   status: string;
   employment_periods: any;
 };
@@ -57,6 +58,7 @@ function renderCustomLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent
 const indicators = [
   { id: "genero", title: "Gênero", subtitle: "Diversidade e inclusão", icon: Users },
   { id: "tempo", title: "Tempo de Casa", subtitle: "Permanência e aniversários", icon: Clock },
+  { id: "idade-escolaridade", title: "Idade & Escolaridade", subtitle: "Formação e faixa etária", icon: GraduationCap },
 ];
 
 function parseLocalDate(dateStr: string) {
@@ -230,6 +232,45 @@ export default function Indicadores() {
     );
   };
 
+  // --- Idade & Escolaridade data (active only) ---
+  const escolaridadeData = (() => {
+    const counts: Record<string, number> = {};
+    activeColaboradores.forEach((c) => {
+      if (c.escolaridade) counts[c.escolaridade] = (counts[c.escolaridade] || 0) + 1;
+    });
+    const total = activeColaboradores.length;
+    return Object.entries(counts)
+      .map(([name, value]) => ({ name, value, percent: total > 0 ? ((value / total) * 100).toFixed(1) : "0" }))
+      .sort((a, b) => b.value - a.value);
+  })();
+
+  const avgIdadeGeral = (() => {
+    if (activeColaboradores.length === 0) return null;
+    const sum = activeColaboradores.reduce((acc, c) => acc + c.idade, 0);
+    return Math.round(sum / activeColaboradores.length);
+  })();
+
+  const idadePorSetorData = (() => {
+    const map: Record<string, { sum: number; count: number }> = {};
+    activeColaboradores.forEach((c) => {
+      if (!map[c.setor]) map[c.setor] = { sum: 0, count: 0 };
+      map[c.setor].sum += c.idade;
+      map[c.setor].count++;
+    });
+    return Object.entries(map)
+      .map(([setor, v]) => ({ setor, media: Math.round(v.sum / v.count) }))
+      .sort((a, b) => b.media - a.media);
+  })();
+
+  const avgIdadePorSexo = (() => {
+    const masc = activeColaboradores.filter((c) => c.sexo.toLowerCase() === "masculino");
+    const fem = activeColaboradores.filter((c) => c.sexo.toLowerCase() === "feminino");
+    return {
+      masculino: masc.length > 0 ? Math.round(masc.reduce((a, c) => a + c.idade, 0) / masc.length) : null,
+      feminino: fem.length > 0 ? Math.round(fem.reduce((a, c) => a + c.idade, 0) / fem.length) : null,
+    };
+  })();
+
   return (
     <div className="bg-background">
       <main className="mx-auto max-w-7xl px-6 py-8">
@@ -374,6 +415,66 @@ export default function Indicadores() {
                   <AniversarianteList list={anivNextMonth} />
                 </TabsContent>
               </Tabs>
+            </div>
+          </div>
+        ) : selected === "idade-escolaridade" ? (
+          <div className="space-y-6">
+            <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+              <h2 className="mb-4 text-base font-semibold text-foreground">Distribuição por Escolaridade</h2>
+              {escolaridadeData.length === 0 ? (
+                <p className="py-10 text-center text-sm text-muted-foreground">Sem dados</p>
+              ) : (
+                <ResponsiveContainer width="100%" height={Math.max(280, escolaridadeData.length * 40)}>
+                  <BarChart data={escolaridadeData} layout="vertical" margin={{ left: 20, right: 40 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 14%, 90%)" />
+                    <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12 }} />
+                    <YAxis type="category" dataKey="name" width={180} tick={{ fontSize: 11 }} />
+                    <Tooltip formatter={(value: number, _name: string, props: any) => [`${value} (${props.payload.percent}%)`, "Colaboradores"]} />
+                    <Bar dataKey="value" name="Colaboradores" fill="hsl(263, 83%, 58%)" radius={[0, 4, 4, 0]}
+                      label={{ position: "right", fontSize: 11, formatter: (v: number) => v }} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+            <div className="rounded-xl border-l-4 border-l-primary border border-border bg-card p-6 shadow-sm">
+              <h2 className="mb-1 text-base font-semibold text-foreground">Média de Idade Geral</h2>
+              <p className="mb-4 text-xs text-muted-foreground">Média geral dos colaboradores ativos</p>
+              {avgIdadeGeral === null ? (
+                <p className="text-sm text-muted-foreground">Sem dados</p>
+              ) : (
+                <p className="text-3xl font-bold text-primary">{avgIdadeGeral} anos</p>
+              )}
+            </div>
+            <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+              <h2 className="mb-4 text-base font-semibold text-foreground">Média de Idade por Setor</h2>
+              {idadePorSetorData.length === 0 ? (
+                <p className="py-10 text-center text-sm text-muted-foreground">Sem dados</p>
+              ) : (
+                <ResponsiveContainer width="100%" height={Math.max(280, idadePorSetorData.length * 50)}>
+                  <BarChart data={idadePorSetorData} layout="vertical" margin={{ left: 20, right: 40 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 14%, 90%)" />
+                    <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12 }} />
+                    <YAxis type="category" dataKey="setor" width={140} tick={{ fontSize: 12 }} />
+                    <Tooltip formatter={(value: number) => [`${value} anos`, "Média"]} />
+                    <Bar dataKey="media" name="Média de Idade" fill="hsl(263, 83%, 58%)" radius={[0, 4, 4, 0]}
+                      label={{ position: "right", fontSize: 12, formatter: (v: number) => `${v} anos` }} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="rounded-xl border-l-4 border-l-primary border border-border bg-card p-6 shadow-sm">
+                <h2 className="mb-1 text-base font-semibold text-foreground">
+                  {avgIdadePorSexo.masculino !== null ? `${avgIdadePorSexo.masculino} anos` : "Sem dados"}
+                </h2>
+                <p className="text-xs text-muted-foreground">Média — Masculino</p>
+              </div>
+              <div className="rounded-xl border-l-4 border-l-primary border border-border bg-card p-6 shadow-sm">
+                <h2 className="mb-1 text-base font-semibold text-foreground">
+                  {avgIdadePorSexo.feminino !== null ? `${avgIdadePorSexo.feminino} anos` : "Sem dados"}
+                </h2>
+                <p className="text-xs text-muted-foreground">Média — Feminino</p>
+              </div>
             </div>
           </div>
         ) : null}
