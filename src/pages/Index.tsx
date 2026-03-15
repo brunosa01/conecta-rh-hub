@@ -472,7 +472,7 @@ export default function Index() {
               </Button>
               <Button
                 onClick={confirmDeactivate}
-                disabled={!deactivateDate || !deactivateReason || (!!deactivateTarget && deactivateDate < deactivateTarget.data_admissao)}
+                disabled={!deactivateDate || !deactivateReason || !isCostValid || (!!deactivateTarget && deactivateDate < deactivateTarget.data_admissao)}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
                 Confirmar Demissão
