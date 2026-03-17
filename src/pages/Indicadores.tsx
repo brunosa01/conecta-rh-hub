@@ -487,6 +487,8 @@ export default function Indicadores() {
           <TurnoverSection colaboradores={colaboradores} />
         ) : selected === "cursos" ? (
           <CoursesSection allSectors={[...new Set(colaboradores.map((c) => c.setor))].sort()} />
+        ) : selected === "crescimento" ? (
+          <GrowthSection colaboradores={colaboradores} />
         ) : null}
       </main>
     </div>
