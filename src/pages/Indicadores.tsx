@@ -64,6 +64,7 @@ const indicators = [
   { id: "idade-escolaridade", title: "Idade & Escolaridade", subtitle: "Formação e faixa etária", icon: GraduationCap },
   { id: "turnover", title: "Turnover", subtitle: "Rotatividade e custos", icon: RefreshCw },
   { id: "cursos", title: "Cursos & Treinamentos", subtitle: "Investimento em capacitação", icon: BookOpen },
+  { id: "crescimento", title: "Crescimento", subtitle: "Evolução do quadro de pessoal", icon: TrendingUp },
 ];
 
 function parseLocalDate(dateStr: string) {
