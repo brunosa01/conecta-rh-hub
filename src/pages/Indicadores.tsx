@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { BarChart3, Users, Clock, Cake, GraduationCap } from "lucide-react";
+import { BarChart3, Users, Clock, Cake, GraduationCap, RefreshCw } from "lucide-react";
+import TurnoverSection from "@/components/TurnoverSection";
 import {
   PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -59,6 +60,7 @@ const indicators = [
   { id: "genero", title: "Gênero", subtitle: "Diversidade e inclusão", icon: Users },
   { id: "tempo", title: "Tempo de Casa", subtitle: "Permanência e aniversários", icon: Clock },
   { id: "idade-escolaridade", title: "Idade & Escolaridade", subtitle: "Formação e faixa etária", icon: GraduationCap },
+  { id: "turnover", title: "Turnover", subtitle: "Rotatividade e custos", icon: RefreshCw },
 ];
 
 function parseLocalDate(dateStr: string) {
@@ -475,8 +477,10 @@ export default function Indicadores() {
                 </h2>
                 <p className="text-xs text-muted-foreground">Média — Feminino</p>
               </div>
-            </div>
+           </div>
           </div>
+        ) : selected === "turnover" ? (
+          <TurnoverSection colaboradores={colaboradores} />
         ) : null}
       </main>
     </div>
