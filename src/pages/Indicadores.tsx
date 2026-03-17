@@ -62,6 +62,7 @@ const indicators = [
   { id: "tempo", title: "Tempo de Casa", subtitle: "Permanência e aniversários", icon: Clock },
   { id: "idade-escolaridade", title: "Idade & Escolaridade", subtitle: "Formação e faixa etária", icon: GraduationCap },
   { id: "turnover", title: "Turnover", subtitle: "Rotatividade e custos", icon: RefreshCw },
+  { id: "cursos", title: "Cursos & Treinamentos", subtitle: "Investimento em capacitação", icon: BookOpen },
 ];
 
 function parseLocalDate(dateStr: string) {
