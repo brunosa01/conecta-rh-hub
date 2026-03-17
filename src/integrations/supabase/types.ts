@@ -62,6 +62,33 @@ export type Database = {
         }
         Relationships: []
       }
+      cursos: {
+        Row: {
+          cost: number
+          created_at: string
+          date: string
+          id: string
+          name: string
+          sectors: string[]
+        }
+        Insert: {
+          cost?: number
+          created_at?: string
+          date: string
+          id?: string
+          name: string
+          sectors?: string[]
+        }
+        Update: {
+          cost?: number
+          created_at?: string
+          date?: string
+          id?: string
+          name?: string
+          sectors?: string[]
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
