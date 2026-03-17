@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { BarChart3, Users, Clock, Cake, GraduationCap, RefreshCw, BookOpen } from "lucide-react";
+import { BarChart3, Users, Clock, Cake, GraduationCap, RefreshCw, BookOpen, TrendingUp } from "lucide-react";
 import TurnoverSection from "@/components/TurnoverSection";
 import CoursesSection from "@/components/CoursesSection";
+import GrowthSection from "@/components/GrowthSection";
 import {
   PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -63,6 +64,7 @@ const indicators = [
   { id: "idade-escolaridade", title: "Idade & Escolaridade", subtitle: "Formação e faixa etária", icon: GraduationCap },
   { id: "turnover", title: "Turnover", subtitle: "Rotatividade e custos", icon: RefreshCw },
   { id: "cursos", title: "Cursos & Treinamentos", subtitle: "Investimento em capacitação", icon: BookOpen },
+  { id: "crescimento", title: "Crescimento", subtitle: "Evolução do quadro de pessoal", icon: TrendingUp },
 ];
 
 function parseLocalDate(dateStr: string) {
@@ -485,6 +487,8 @@ export default function Indicadores() {
           <TurnoverSection colaboradores={colaboradores} />
         ) : selected === "cursos" ? (
           <CoursesSection allSectors={[...new Set(colaboradores.map((c) => c.setor))].sort()} />
+        ) : selected === "crescimento" ? (
+          <GrowthSection colaboradores={colaboradores} />
         ) : null}
       </main>
     </div>
