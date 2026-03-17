@@ -477,8 +477,10 @@ export default function Indicadores() {
                 </h2>
                 <p className="text-xs text-muted-foreground">Média — Feminino</p>
               </div>
-            </div>
+           </div>
           </div>
+        ) : selected === "turnover" ? (
+          <TurnoverSection colaboradores={colaboradores} />
         ) : null}
       </main>
     </div>
