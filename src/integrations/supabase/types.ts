@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      absences: {
+        Row: {
+          collaborator_id: string
+          collaborator_name: string
+          collaborator_sector: string
+          created_at: string
+          end_date: string
+          id: string
+          reason: string
+          start_date: string
+          total_hours: number
+        }
+        Insert: {
+          collaborator_id: string
+          collaborator_name: string
+          collaborator_sector: string
+          created_at?: string
+          end_date: string
+          id?: string
+          reason: string
+          start_date: string
+          total_hours?: number
+        }
+        Update: {
+          collaborator_id?: string
+          collaborator_name?: string
+          collaborator_sector?: string
+          created_at?: string
+          end_date?: string
+          id?: string
+          reason?: string
+          start_date?: string
+          total_hours?: number
+        }
+        Relationships: []
+      }
       colaboradores: {
         Row: {
           cargo: string
