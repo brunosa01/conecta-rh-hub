@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { BarChart3, Users, Clock, Cake, GraduationCap, RefreshCw, BookOpen, TrendingUp } from "lucide-react";
+import { BarChart3, Users, Clock, Cake, GraduationCap, RefreshCw, BookOpen, TrendingUp, UserX } from "lucide-react";
 import TurnoverSection from "@/components/TurnoverSection";
 import CoursesSection from "@/components/CoursesSection";
 import GrowthSection from "@/components/GrowthSection";
+import AbsenteeismSection from "@/components/AbsenteeismSection";
 import {
   PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -65,6 +66,7 @@ const indicators = [
   { id: "turnover", title: "Turnover", subtitle: "Rotatividade e custos", icon: RefreshCw },
   { id: "cursos", title: "Cursos & Treinamentos", subtitle: "Investimento em capacitação", icon: BookOpen },
   { id: "crescimento", title: "Crescimento", subtitle: "Evolução do quadro de pessoal", icon: TrendingUp },
+  { id: "absenteismo", title: "Absenteísmo", subtitle: "Afastamentos e ausências", icon: UserX },
 ];
 
 function parseLocalDate(dateStr: string) {
@@ -489,6 +491,8 @@ export default function Indicadores() {
           <CoursesSection allSectors={[...new Set(colaboradores.map((c) => c.setor))].sort()} />
         ) : selected === "crescimento" ? (
           <GrowthSection colaboradores={colaboradores} />
+        ) : selected === "absenteismo" ? (
+          <AbsenteeismSection activeColaboradores={activeColaboradores.map(c => ({ id: c.id, nome_completo: c.nome_completo, setor: c.setor, status: c.status }))} />
         ) : null}
       </main>
     </div>
