@@ -491,6 +491,8 @@ export default function Indicadores() {
           <CoursesSection allSectors={[...new Set(colaboradores.map((c) => c.setor))].sort()} />
         ) : selected === "crescimento" ? (
           <GrowthSection colaboradores={colaboradores} />
+        ) : selected === "absenteismo" ? (
+          <AbsenteeismSection activeColaboradores={activeColaboradores.map(c => ({ id: c.id, nome_completo: c.nome_completo, setor: c.setor, status: c.status }))} />
         ) : null}
       </main>
     </div>
