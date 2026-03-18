@@ -66,6 +66,7 @@ const indicators = [
   { id: "turnover", title: "Turnover", subtitle: "Rotatividade e custos", icon: RefreshCw },
   { id: "cursos", title: "Cursos & Treinamentos", subtitle: "Investimento em capacitação", icon: BookOpen },
   { id: "crescimento", title: "Crescimento", subtitle: "Evolução do quadro de pessoal", icon: TrendingUp },
+  { id: "absenteismo", title: "Absenteísmo", subtitle: "Afastamentos e ausências", icon: UserX },
 ];
 
 function parseLocalDate(dateStr: string) {
