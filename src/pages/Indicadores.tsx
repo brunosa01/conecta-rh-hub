@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { BarChart3, Users, Clock, Cake, GraduationCap, RefreshCw, BookOpen, TrendingUp } from "lucide-react";
+import { BarChart3, Users, Clock, Cake, GraduationCap, RefreshCw, BookOpen, TrendingUp, UserX } from "lucide-react";
 import TurnoverSection from "@/components/TurnoverSection";
 import CoursesSection from "@/components/CoursesSection";
 import GrowthSection from "@/components/GrowthSection";
+import AbsenteeismSection from "@/components/AbsenteeismSection";
 import {
   PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
