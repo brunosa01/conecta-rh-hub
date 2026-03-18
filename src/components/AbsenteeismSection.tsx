@@ -21,7 +21,6 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -56,22 +55,63 @@ type Absence = {
   total_hours: number;
 };
 
-function countWeekdays(start: string, end: string): number {
-  const s = new Date(start + "T00:00:00");
-  const e = new Date(end + "T00:00:00");
-  let count = 0;
-  const d = new Date(s);
-  while (d <= e) {
-    const dow = d.getDay();
-    if (dow !== 0 && dow !== 6) count++;
-    d.setDate(d.getDate() + 1);
+/**
+ * Calculate business hours between two datetimes.
+ * Business hours: Mon–Fri, 08:00–18:00 (10h/day).
+ */
+function calcBusinessHours(startDt: Date, endDt: Date): number {
+  if (endDt <= startDt) return 0;
+
+  let totalMinutes = 0;
+  const WORK_START = 8; // 08:00
+  const WORK_END = 18;  // 18:00
+
+  // Iterate day by day
+  const cursor = new Date(startDt);
+  while (cursor < endDt) {
+    const dow = cursor.getDay();
+    if (dow !== 0 && dow !== 6) {
+      // It's a weekday
+      const dayStart = new Date(cursor);
+      dayStart.setHours(WORK_START, 0, 0, 0);
+      const dayEnd = new Date(cursor);
+      dayEnd.setHours(WORK_END, 0, 0, 0);
+
+      const effectiveStart = cursor > dayStart ? cursor : dayStart;
+      const nextDay = new Date(cursor);
+      nextDay.setDate(nextDay.getDate() + 1);
+      nextDay.setHours(0, 0, 0, 0);
+      const periodEnd = endDt < nextDay ? endDt : nextDay;
+      const effectiveEnd = periodEnd < dayEnd ? periodEnd : dayEnd;
+
+      if (effectiveStart < effectiveEnd && effectiveStart < dayEnd && effectiveEnd > dayStart) {
+        const clampedStart = effectiveStart < dayStart ? dayStart : effectiveStart;
+        const clampedEnd = effectiveEnd > dayEnd ? dayEnd : effectiveEnd;
+        if (clampedEnd > clampedStart) {
+          totalMinutes += (clampedEnd.getTime() - clampedStart.getTime()) / 60000;
+        }
+      }
+    }
+    // Move to next day 00:00
+    cursor.setDate(cursor.getDate() + 1);
+    cursor.setHours(0, 0, 0, 0);
   }
-  return count;
+
+  return Math.round(totalMinutes / 60 * 10) / 10; // 1 decimal
 }
 
-function formatDateBR(dateStr: string) {
-  const [y, m, d] = dateStr.split("-");
-  return `${d}/${m}/${y}`;
+function formatDateTimeBR(isoStr: string) {
+  const d = new Date(isoStr);
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  return `${day}/${month}/${year} ${hh}:${mm}`;
+}
+
+function formatHoursBR(h: number) {
+  return h.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 1 });
 }
 
 export default function AbsenteeismSection({ activeColaboradores }: { activeColaboradores: Colaborador[] }) {
@@ -86,7 +126,9 @@ export default function AbsenteeismSection({ activeColaboradores }: { activeCola
   const [formCollaboratorId, setFormCollaboratorId] = useState("");
   const [formReason, setFormReason] = useState("");
   const [formStartDate, setFormStartDate] = useState<Date | undefined>();
+  const [formStartTime, setFormStartTime] = useState("08:00");
   const [formEndDate, setFormEndDate] = useState<Date | undefined>();
+  const [formEndTime, setFormEndTime] = useState("18:00");
   const [customReasons, setCustomReasons] = useState<string[]>([]);
   const [addingReason, setAddingReason] = useState(false);
   const [newReason, setNewReason] = useState("");
@@ -97,7 +139,6 @@ export default function AbsenteeismSection({ activeColaboradores }: { activeCola
     setLoading(true);
     const { data } = await supabase.from("absences").select("*").order("start_date", { ascending: false });
     setAbsences((data as Absence[]) || []);
-    // Extract custom reasons
     if (data) {
       const existing = new Set(DEFAULT_REASONS);
       const extras = [...new Set((data as Absence[]).map(a => a.reason).filter(r => !existing.has(r)))];
@@ -108,24 +149,33 @@ export default function AbsenteeismSection({ activeColaboradores }: { activeCola
 
   useEffect(() => { fetchAbsences(); }, []);
 
-  const selectedCollab = activeColaboradores.find(c => c.id === formCollaboratorId);
+  // Build full datetime from date + time
+  const buildDateTime = (date: Date | undefined, time: string): Date | null => {
+    if (!date) return null;
+    const [hh, mm] = time.split(":").map(Number);
+    const dt = new Date(date);
+    dt.setHours(hh, mm, 0, 0);
+    return dt;
+  };
 
-  const calcDays = useMemo(() => {
-    if (!formStartDate || !formEndDate) return null;
-    const s = format(formStartDate, "yyyy-MM-dd");
-    const e = format(formEndDate, "yyyy-MM-dd");
-    if (e < s) return null;
-    const days = countWeekdays(s, e);
-    return { days, hours: days * 8 };
-  }, [formStartDate, formEndDate]);
+  const startDateTime = buildDateTime(formStartDate, formStartTime);
+  const endDateTime = buildDateTime(formEndDate, formEndTime);
 
-  const dateError = formStartDate && formEndDate && format(formEndDate, "yyyy-MM-dd") < format(formStartDate, "yyyy-MM-dd");
+  const dateError = startDateTime && endDateTime && endDateTime < startDateTime;
+
+  const calcHours = useMemo(() => {
+    if (!startDateTime || !endDateTime || endDateTime < startDateTime) return null;
+    const hours = calcBusinessHours(startDateTime, endDateTime);
+    return hours;
+  }, [formStartDate, formStartTime, formEndDate, formEndTime]);
 
   const resetForm = () => {
     setFormCollaboratorId("");
     setFormReason("");
     setFormStartDate(undefined);
+    setFormStartTime("08:00");
     setFormEndDate(undefined);
+    setFormEndTime("18:00");
     setEditing(null);
   };
 
@@ -134,13 +184,17 @@ export default function AbsenteeismSection({ activeColaboradores }: { activeCola
     setEditing(a);
     setFormCollaboratorId(a.collaborator_id);
     setFormReason(a.reason);
-    setFormStartDate(new Date(a.start_date + "T00:00:00"));
-    setFormEndDate(new Date(a.end_date + "T00:00:00"));
+    const sd = new Date(a.start_date);
+    const ed = new Date(a.end_date);
+    setFormStartDate(sd);
+    setFormStartTime(`${String(sd.getHours()).padStart(2, "0")}:${String(sd.getMinutes()).padStart(2, "0")}`);
+    setFormEndDate(ed);
+    setFormEndTime(`${String(ed.getHours()).padStart(2, "0")}:${String(ed.getMinutes()).padStart(2, "0")}`);
     setDialogOpen(true);
   };
 
   const handleSave = async () => {
-    if (!formCollaboratorId || !formReason || !formStartDate || !formEndDate || dateError || !calcDays) return;
+    if (!formCollaboratorId || !formReason || !startDateTime || !endDateTime || dateError || calcHours === null) return;
     const collab = activeColaboradores.find(c => c.id === formCollaboratorId);
     if (!collab && !editing) return;
 
@@ -149,9 +203,9 @@ export default function AbsenteeismSection({ activeColaboradores }: { activeCola
       collaborator_name: collab?.nome_completo || editing?.collaborator_name || "",
       collaborator_sector: collab?.setor || editing?.collaborator_sector || "",
       reason: formReason,
-      start_date: format(formStartDate, "yyyy-MM-dd"),
-      end_date: format(formEndDate, "yyyy-MM-dd"),
-      total_hours: calcDays.hours,
+      start_date: startDateTime.toISOString(),
+      end_date: endDateTime.toISOString(),
+      total_hours: calcHours,
     };
 
     if (editing) {
@@ -190,12 +244,12 @@ export default function AbsenteeismSection({ activeColaboradores }: { activeCola
   const currentYear = now.getFullYear();
 
   const absInMonth = absences.filter(a => {
-    const [y, m] = a.start_date.split("-").map(Number);
-    return y === currentYear && m === currentMonth;
+    const d = new Date(a.start_date);
+    return d.getFullYear() === currentYear && d.getMonth() + 1 === currentMonth;
   });
   const absInYear = absences.filter(a => {
-    const [y] = a.start_date.split("-").map(Number);
-    return y === currentYear;
+    const d = new Date(a.start_date);
+    return d.getFullYear() === currentYear;
   });
 
   const hoursMonth = absInMonth.reduce((s, a) => s + a.total_hours, 0);
@@ -204,21 +258,18 @@ export default function AbsenteeismSection({ activeColaboradores }: { activeCola
 
   const MONTH_NAMES = ["", "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 
-  // Hours by sector - month
   const hoursBySectorMonth = useMemo(() => {
     const map: Record<string, number> = {};
     absInMonth.forEach(a => { map[a.collaborator_sector] = (map[a.collaborator_sector] || 0) + a.total_hours; });
     return Object.entries(map).map(([setor, hours]) => ({ setor, hours })).sort((a, b) => b.hours - a.hours);
   }, [absInMonth]);
 
-  // Hours by sector - year
   const hoursBySectorYear = useMemo(() => {
     const map: Record<string, number> = {};
     absInYear.forEach(a => { map[a.collaborator_sector] = (map[a.collaborator_sector] || 0) + a.total_hours; });
     return Object.entries(map).map(([setor, hours]) => ({ setor, hours })).sort((a, b) => b.hours - a.hours);
   }, [absInYear]);
 
-  // Reason distribution (all time)
   const reasonData = useMemo(() => {
     const map: Record<string, number> = {};
     absences.forEach(a => { map[a.reason] = (map[a.reason] || 0) + a.total_hours; });
@@ -229,7 +280,7 @@ export default function AbsenteeismSection({ activeColaboradores }: { activeCola
 
   return (
     <div className="space-y-6">
-      {/* Header with add button */}
+      {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-foreground">Absenteísmo</h2>
         <Button onClick={openAdd} className="bg-primary hover:bg-primary/90 text-primary-foreground">
@@ -240,12 +291,12 @@ export default function AbsenteeismSection({ activeColaboradores }: { activeCola
       {/* SECTION 1: Summary cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-xl border-l-4 border-l-primary border border-border bg-card p-5 shadow-sm">
-          <p className="text-2xl font-bold text-primary">{hoursMonth} horas</p>
+          <p className="text-2xl font-bold text-primary">{formatHoursBR(hoursMonth)} horas</p>
           <p className="text-sm font-medium text-foreground">Horas no Mês Atual</p>
           <p className="text-xs text-muted-foreground">Mês de {MONTH_NAMES[currentMonth]}/{currentYear}</p>
         </div>
         <div className="rounded-xl border-l-4 border-l-primary border border-border bg-card p-5 shadow-sm">
-          <p className="text-2xl font-bold text-primary">{hoursYear} horas</p>
+          <p className="text-2xl font-bold text-primary">{formatHoursBR(hoursYear)} horas</p>
           <p className="text-sm font-medium text-foreground">Horas no Ano Atual</p>
           <p className="text-xs text-muted-foreground">Ano de {currentYear}</p>
         </div>
@@ -273,9 +324,9 @@ export default function AbsenteeismSection({ activeColaboradores }: { activeCola
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 14%, 90%)" />
                 <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12 }} />
                 <YAxis type="category" dataKey="setor" width={140} tick={{ fontSize: 12 }} />
-                <Tooltip formatter={(v: number) => [`${v}h`, "Horas"]} />
+                <Tooltip formatter={(v: number) => [`${formatHoursBR(v)}h`, "Horas"]} />
                 <Bar dataKey="hours" name="Horas" fill="hsl(263, 83%, 58%)" radius={[0, 4, 4, 0]}
-                  label={{ position: "right", fontSize: 11, formatter: (v: number) => `${v}h` }} />
+                  label={{ position: "right", fontSize: 11, formatter: (v: number) => `${formatHoursBR(v)}h` }} />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -290,9 +341,9 @@ export default function AbsenteeismSection({ activeColaboradores }: { activeCola
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 14%, 90%)" />
                 <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12 }} />
                 <YAxis type="category" dataKey="setor" width={140} tick={{ fontSize: 12 }} />
-                <Tooltip formatter={(v: number) => [`${v}h`, "Horas"]} />
+                <Tooltip formatter={(v: number) => [`${formatHoursBR(v)}h`, "Horas"]} />
                 <Bar dataKey="hours" name="Horas" fill="hsl(263, 83%, 58%)" radius={[0, 4, 4, 0]}
-                  label={{ position: "right", fontSize: 11, formatter: (v: number) => `${v}h` }} />
+                  label={{ position: "right", fontSize: 11, formatter: (v: number) => `${formatHoursBR(v)}h` }} />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -314,11 +365,11 @@ export default function AbsenteeismSection({ activeColaboradores }: { activeCola
                   const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
                   const x = cx + radius * Math.cos(-midAngle * RADIAN);
                   const y = cy + radius * Math.sin(-midAngle * RADIAN);
-                  return <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={12} fontWeight={600}>{value}h</text>;
+                  return <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={12} fontWeight={600}>{formatHoursBR(value)}h</text>;
                 }}>
                 {reasonData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
               </Pie>
-              <Tooltip formatter={(v: number) => [`${v} horas`, "Total"]} />
+              <Tooltip formatter={(v: number) => [`${formatHoursBR(v)} horas`, "Total"]} />
               <Legend />
             </PieChart>
           </ResponsiveContainer>
@@ -348,8 +399,8 @@ export default function AbsenteeismSection({ activeColaboradores }: { activeCola
                         <th className="pb-2 pr-4 font-medium">Colaborador</th>
                         <th className="pb-2 pr-4 font-medium">Setor</th>
                         <th className="pb-2 pr-4 font-medium">Motivo</th>
-                        <th className="pb-2 pr-4 font-medium">Data Início</th>
-                        <th className="pb-2 pr-4 font-medium">Data Fim</th>
+                        <th className="pb-2 pr-4 font-medium">Saída</th>
+                        <th className="pb-2 pr-4 font-medium">Retorno</th>
                         <th className="pb-2 pr-4 font-medium">Horas</th>
                         <th className="pb-2 font-medium">Ações</th>
                       </tr>
@@ -360,9 +411,9 @@ export default function AbsenteeismSection({ activeColaboradores }: { activeCola
                           <td className="py-3 pr-4 font-medium text-foreground">{a.collaborator_name}</td>
                           <td className="py-3 pr-4 text-muted-foreground">{a.collaborator_sector}</td>
                           <td className="py-3 pr-4 text-muted-foreground">{a.reason}</td>
-                          <td className="py-3 pr-4 text-muted-foreground">{formatDateBR(a.start_date)}</td>
-                          <td className="py-3 pr-4 text-muted-foreground">{formatDateBR(a.end_date)}</td>
-                          <td className="py-3 pr-4 text-muted-foreground">{a.total_hours}h</td>
+                          <td className="py-3 pr-4 text-muted-foreground">{formatDateTimeBR(a.start_date)}</td>
+                          <td className="py-3 pr-4 text-muted-foreground">{formatDateTimeBR(a.end_date)}</td>
+                          <td className="py-3 pr-4 text-muted-foreground">{formatHoursBR(a.total_hours)}h</td>
                           <td className="py-3">
                             <div className="flex gap-1">
                               <button onClick={() => openEdit(a)} className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground">
@@ -420,46 +471,65 @@ export default function AbsenteeismSection({ activeColaboradores }: { activeCola
                 </Select>
               )}
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Data de Início</Label>
+
+            {/* Departure datetime */}
+            <div>
+              <Label>Data e Hora de Saída</Label>
+              <div className="flex gap-2">
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !formStartDate && "text-muted-foreground")}>
+                    <Button variant="outline" className={cn("flex-1 justify-start text-left font-normal", !formStartDate && "text-muted-foreground")}>
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formStartDate ? format(formStartDate, "dd/MM/yyyy") : "Selecione"}
+                      {formStartDate ? format(formStartDate, "dd/MM/yyyy") : "Data"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar mode="single" selected={formStartDate} onSelect={setFormStartDate} initialFocus className="p-3 pointer-events-auto" />
                   </PopoverContent>
                 </Popover>
+                <Input
+                  type="time"
+                  value={formStartTime}
+                  onChange={e => setFormStartTime(e.target.value)}
+                  className="w-28"
+                />
               </div>
-              <div>
-                <Label>Data de Fim</Label>
+            </div>
+
+            {/* Return datetime */}
+            <div>
+              <Label>Data e Hora de Retorno</Label>
+              <div className="flex gap-2">
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !formEndDate && "text-muted-foreground")}>
+                    <Button variant="outline" className={cn("flex-1 justify-start text-left font-normal", !formEndDate && "text-muted-foreground")}>
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formEndDate ? format(formEndDate, "dd/MM/yyyy") : "Selecione"}
+                      {formEndDate ? format(formEndDate, "dd/MM/yyyy") : "Data"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar mode="single" selected={formEndDate} onSelect={setFormEndDate} initialFocus className="p-3 pointer-events-auto" />
                   </PopoverContent>
                 </Popover>
-                {dateError && <p className="mt-1 text-xs text-destructive">A data de fim não pode ser anterior à data de início</p>}
+                <Input
+                  type="time"
+                  value={formEndTime}
+                  onChange={e => setFormEndTime(e.target.value)}
+                  className="w-28"
+                />
               </div>
+              {dateError && <p className="mt-1 text-xs text-destructive">A data/hora de retorno não pode ser anterior à saída</p>}
             </div>
-            {calcDays && (
+
+            {calcHours !== null && (
               <div className="rounded-lg bg-accent/50 px-3 py-2 text-sm font-medium text-foreground">
-                {calcDays.hours} horas ({calcDays.days} dias úteis)
+                {formatHoursBR(calcHours)} horas
               </div>
             )}
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => { setDialogOpen(false); resetForm(); }}>Cancelar</Button>
-            <Button onClick={handleSave} disabled={!formCollaboratorId || !formReason || !formStartDate || !formEndDate || !!dateError}>
+            <Button onClick={handleSave} disabled={!formCollaboratorId || !formReason || !startDateTime || !endDateTime || !!dateError}>
               {editing ? "Salvar Alterações" : "Salvar Afastamento"}
             </Button>
           </DialogFooter>
