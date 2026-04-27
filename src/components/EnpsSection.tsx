@@ -106,6 +106,9 @@ export default function EnpsSection({ activeCount }: Props) {
   // Delete confirm
   const [deleteTarget, setDeleteTarget] = useState<Survey | null>(null);
 
+  // Distribuição de Notas — selected survey id
+  const [distSurveyId, setDistSurveyId] = useState<string | null>(null);
+
   const fetchSurveys = async () => {
     setLoading(true);
     const { data, error } = await sb.from("enpssurveys").select("*");
