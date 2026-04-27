@@ -495,6 +495,8 @@ export default function Indicadores() {
           <GrowthSection colaboradores={colaboradores} />
         ) : selected === "absenteismo" ? (
           <AbsenteeismSection activeColaboradores={activeColaboradores.map(c => ({ id: c.id, nome_completo: c.nome_completo, setor: c.setor, status: c.status }))} />
+        ) : selected === "enps" ? (
+          <EnpsSection activeCount={activeColaboradores.length} />
         ) : null}
       </main>
     </div>
