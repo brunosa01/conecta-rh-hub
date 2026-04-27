@@ -68,6 +68,7 @@ const indicators = [
   { id: "cursos", title: "Cursos & Treinamentos", subtitle: "Investimento em capacitação", icon: BookOpen },
   { id: "crescimento", title: "Crescimento", subtitle: "Evolução do quadro de pessoal", icon: TrendingUp },
   { id: "absenteismo", title: "Absenteísmo", subtitle: "Afastamentos e ausências", icon: UserX },
+  { id: "enps", title: "E-NPS", subtitle: "Satisfação dos colaboradores", icon: Smile },
 ];
 
 function parseLocalDate(dateStr: string) {
