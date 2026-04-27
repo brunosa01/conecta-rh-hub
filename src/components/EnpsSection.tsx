@@ -201,8 +201,12 @@ export default function EnpsSection({ activeCount }: Props) {
     : null;
   const lastClass = lastMetrics ? classifyEnps(lastMetrics.enps) : null;
 
-  const distData = lastSurvey
-    ? SCORES.map((s) => ({ score: String(s), value: Number(lastSurvey.votes[String(s)] || 0) }))
+  // Selected survey for the distribution chart (defaults to most recent)
+  const distSurvey =
+    sortedDesc.find((s) => s.id === distSurveyId) || lastSurvey;
+
+  const distData = distSurvey
+    ? SCORES.map((s) => ({ score: String(s), value: Number(distSurvey.votes[String(s)] || 0) }))
     : [];
 
   const evolutionData = sortedSurveys.map((s) => {
