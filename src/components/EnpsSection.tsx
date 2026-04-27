@@ -291,7 +291,25 @@ export default function EnpsSection({ activeCount }: Props) {
 
           {/* SECTION 2 — Distribuição de Notas */}
           <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-            <h3 className="mb-4 text-base font-semibold text-foreground">Distribuição de Notas — Última Pesquisa</h3>
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <h3 className="text-base font-semibold text-foreground">
+                Distribuição de Notas{distSurvey ? ` — ${distSurvey.label}` : ""}
+              </h3>
+              <div className="flex items-center gap-2">
+                <Label className="text-xs text-muted-foreground">Pesquisa:</Label>
+                <Select
+                  value={distSurvey?.id ?? ""}
+                  onValueChange={(v) => setDistSurveyId(v)}
+                >
+                  <SelectTrigger className="h-9 w-[160px]"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {sortedDesc.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={distData} margin={{ top: 24, right: 16, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 14%, 90%)" />
