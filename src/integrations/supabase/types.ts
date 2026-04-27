@@ -125,6 +125,39 @@ export type Database = {
         }
         Relationships: []
       }
+      enpssurveys: {
+        Row: {
+          active_collaborators_at_time: number
+          created_at: string
+          id: string
+          label: string
+          month: number
+          total_responses: number
+          votes: Json
+          year: number
+        }
+        Insert: {
+          active_collaborators_at_time?: number
+          created_at?: string
+          id?: string
+          label: string
+          month: number
+          total_responses?: number
+          votes?: Json
+          year: number
+        }
+        Update: {
+          active_collaborators_at_time?: number
+          created_at?: string
+          id?: string
+          label?: string
+          month?: number
+          total_responses?: number
+          votes?: Json
+          year?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
