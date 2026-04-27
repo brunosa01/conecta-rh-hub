@@ -28,9 +28,9 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b border-sidebar-border px-3 py-4">
+      <SidebarHeader className="border-b border-sidebar-border px-2 py-4">
         <div className="flex items-center gap-2 overflow-hidden">
-          <img src={logo} alt="Conecta Ads" className="h-8 shrink-0 object-fill" />
+          <img src={logo} alt="Conecta Ads" className="h-8 w-auto shrink-0 object-contain" />
           {!collapsed && (
             <span className="text-sm font-bold text-sidebar-foreground whitespace-nowrap">
               Hub de Gestão Humana
