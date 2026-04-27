@@ -106,6 +106,9 @@ export default function EnpsSection({ activeCount }: Props) {
   // Delete confirm
   const [deleteTarget, setDeleteTarget] = useState<Survey | null>(null);
 
+  // Distribuição de Notas — selected survey id
+  const [distSurveyId, setDistSurveyId] = useState<string | null>(null);
+
   const fetchSurveys = async () => {
     setLoading(true);
     const { data, error } = await sb.from("enpssurveys").select("*");
@@ -198,8 +201,12 @@ export default function EnpsSection({ activeCount }: Props) {
     : null;
   const lastClass = lastMetrics ? classifyEnps(lastMetrics.enps) : null;
 
-  const distData = lastSurvey
-    ? SCORES.map((s) => ({ score: String(s), value: Number(lastSurvey.votes[String(s)] || 0) }))
+  // Selected survey for the distribution chart (defaults to most recent)
+  const distSurvey =
+    sortedDesc.find((s) => s.id === distSurveyId) || lastSurvey;
+
+  const distData = distSurvey
+    ? SCORES.map((s) => ({ score: String(s), value: Number(distSurvey.votes[String(s)] || 0) }))
     : [];
 
   const evolutionData = sortedSurveys.map((s) => {
@@ -284,7 +291,25 @@ export default function EnpsSection({ activeCount }: Props) {
 
           {/* SECTION 2 — Distribuição de Notas */}
           <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-            <h3 className="mb-4 text-base font-semibold text-foreground">Distribuição de Notas — Última Pesquisa</h3>
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <h3 className="text-base font-semibold text-foreground">
+                Distribuição de Notas{distSurvey ? ` — ${distSurvey.label}` : ""}
+              </h3>
+              <div className="flex items-center gap-2">
+                <Label className="text-xs text-muted-foreground">Pesquisa:</Label>
+                <Select
+                  value={distSurvey?.id ?? ""}
+                  onValueChange={(v) => setDistSurveyId(v)}
+                >
+                  <SelectTrigger className="h-9 w-[160px]"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {sortedDesc.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={distData} margin={{ top: 24, right: 16, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 14%, 90%)" />
