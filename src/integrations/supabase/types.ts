@@ -62,6 +62,7 @@ export type Database = {
           id: string
           idade: number
           nome_completo: string
+          person_type: string
           setor: string
           sexo: string
           status: string
@@ -77,6 +78,7 @@ export type Database = {
           id?: string
           idade: number
           nome_completo: string
+          person_type?: string
           setor: string
           sexo: string
           status?: string
@@ -92,6 +94,7 @@ export type Database = {
           id?: string
           idade?: number
           nome_completo?: string
+          person_type?: string
           setor?: string
           sexo?: string
           status?: string
