@@ -2,15 +2,16 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ColaboradorDialog, ColaboradorForm } from "@/components/AddColaboradorDialog";
+import { ColaboradorDialog, ColaboradorForm, PersonType, personTypeLabels } from "@/components/AddColaboradorDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UserPlus, Users, Pencil, ToggleLeft, ToggleRight, RotateCcw, Trash2, Plus } from "lucide-react";
+import { UserPlus, Users, Pencil, ToggleLeft, ToggleRight, RotateCcw, Trash2, Plus, Briefcase, Wrench, User } from "lucide-react";
 import { toast } from "sonner";
 
+// All person types (colaborador, socio, prestador) are included equally in all indicators
 type EmploymentPeriod = {
   admissionDate: string;
   dismissalDate: string | null;
@@ -31,6 +32,7 @@ type Colaborador = {
   escolaridade: string;
   status: string;
   employment_periods: EmploymentPeriod[];
+  person_type: PersonType;
 };
 
 const generoLabel: Record<string, string> = {
@@ -54,13 +56,25 @@ function formatDate(dateStr: string): string {
   return `${String(day).padStart(2, "0")}/${String(month).padStart(2, "0")}/${year}`;
 }
 
+const TABS: { type: PersonType; label: string; addLabel: string; icon: typeof User }[] = [
+  { type: "colaborador", label: "Colaboradores", addLabel: "Adicionar Colaborador", icon: User },
+  { type: "socio", label: "Sócios", addLabel: "Adicionar Sócio", icon: Briefcase },
+  { type: "prestador", label: "Prestadores de Serviço", addLabel: "Adicionar Prestador", icon: Wrench },
+];
+
 export default function Index() {
   const [colaboradores, setColaboradores] = useState<Colaborador[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingData, setEditingData] = useState<ColaboradorForm | null>(null);
-  const [showInactive, setShowInactive] = useState(false);
+  const [activeTab, setActiveTab] = useState<PersonType>("colaborador");
+  const [showInactiveByTab, setShowInactiveByTab] = useState<Record<PersonType, boolean>>({
+    colaborador: false,
+    socio: false,
+    prestador: false,
+  });
+  const [dialogType, setDialogType] = useState<PersonType>("colaborador");
 
   // Deactivation state
   const [deactivateTarget, setDeactivateTarget] = useState<Colaborador | null>(null);
@@ -92,9 +106,18 @@ export default function Index() {
     fetchColaboradores();
   }, []);
 
-  const activeList = colaboradores.filter((c) => c.status === "active");
-  const inactiveList = colaboradores.filter((c) => c.status === "inactive");
+  const showInactive = showInactiveByTab[activeTab];
+  const tabRecords = colaboradores.filter((c) => (c.person_type || "colaborador") === activeTab);
+  const activeList = tabRecords.filter((c) => c.status === "active");
+  const inactiveList = tabRecords.filter((c) => c.status === "inactive");
   const displayList = showInactive ? inactiveList : activeList;
+
+  const activeCounts: Record<PersonType, number> = {
+    colaborador: colaboradores.filter((c) => (c.person_type || "colaborador") === "colaborador" && c.status === "active").length,
+    socio: colaboradores.filter((c) => c.person_type === "socio" && c.status === "active").length,
+    prestador: colaboradores.filter((c) => c.person_type === "prestador" && c.status === "active").length,
+  };
+  const totalActive = activeCounts.colaborador + activeCounts.socio + activeCounts.prestador;
 
   const handleEdit = (c: Colaborador) => {
     setEditingId(c.id);
@@ -108,13 +131,16 @@ export default function Index() {
       data_admissao: c.data_admissao,
       idade: String(c.idade),
       escolaridade: c.escolaridade,
+      person_type: (c.person_type || "colaborador") as PersonType,
     });
+    setDialogType((c.person_type || "colaborador") as PersonType);
     setDialogOpen(true);
   };
 
   const handleAdd = () => {
     setEditingId(null);
     setEditingData(null);
+    setDialogType(activeTab);
     setDialogOpen(true);
   };
 
@@ -161,7 +187,7 @@ export default function Index() {
     if (error) {
       toast.error("Erro ao desativar: " + error.message);
     } else {
-      toast.success("Colaborador desativado com sucesso!");
+      toast.success("Desativado com sucesso!");
       fetchColaboradores();
     }
     setDeactivateTarget(null);
@@ -212,7 +238,7 @@ export default function Index() {
     if (error) {
       toast.error("Erro ao reativar: " + error.message);
     } else {
-      toast.success("Colaborador reativado com sucesso!");
+      toast.success("Reativado com sucesso!");
       fetchColaboradores();
     }
     setReactivateTarget(null);
@@ -225,7 +251,7 @@ export default function Index() {
     if (error) {
       toast.error("Erro ao excluir: " + error.message);
     } else {
-      toast.success("Colaborador excluído com sucesso!");
+      toast.success("Excluído com sucesso!");
       fetchColaboradores();
     }
     setDeleteId(null);
@@ -239,22 +265,71 @@ export default function Index() {
     return null;
   };
 
+  const currentTabConfig = TABS.find((t) => t.type === activeTab)!;
+
   return (
     <div className="bg-background">
       <main className="mx-auto max-w-7xl px-6 py-8">
-        <div className="mb-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Users className="h-6 w-6 text-primary" />
-            <h1 className="text-2xl font-bold text-foreground">Colaboradores</h1>
-            <span className="rounded-full bg-accent px-3 py-0.5 text-sm font-medium text-accent-foreground">
-              {displayList.length}
-            </span>
+        <div className="mb-6 flex items-center gap-3">
+          <Users className="h-6 w-6 text-primary" />
+          <h1 className="text-2xl font-bold text-foreground">Pessoas</h1>
+        </div>
+
+        {/* Summary pills */}
+        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="rounded-lg border border-border bg-card px-4 py-3 shadow-sm">
+            <p className="text-xs text-muted-foreground">Colaboradores Ativos</p>
+            <p className="text-xl font-bold text-foreground">{activeCounts.colaborador}</p>
           </div>
+          <div className="rounded-lg border border-border bg-card px-4 py-3 shadow-sm">
+            <p className="text-xs text-muted-foreground">Sócios Ativos</p>
+            <p className="text-xl font-bold text-foreground">{activeCounts.socio}</p>
+          </div>
+          <div className="rounded-lg border border-border bg-card px-4 py-3 shadow-sm">
+            <p className="text-xs text-muted-foreground">Prestadores Ativos</p>
+            <p className="text-xl font-bold text-foreground">{activeCounts.prestador}</p>
+          </div>
+          <div className="rounded-lg border border-primary/40 bg-primary/5 px-4 py-3 shadow-sm">
+            <p className="text-xs text-primary">Total Geral</p>
+            <p className="text-xl font-bold text-primary">{totalActive}</p>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="mb-4 flex flex-wrap gap-1 border-b border-border">
+          {TABS.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.type;
+            return (
+              <button
+                key={tab.type}
+                onClick={() => setActiveTab(tab.type)}
+                className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
+                  isActive
+                    ? "border-primary text-primary"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Icon className="h-4 w-4" />
+                {tab.label}
+                <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${isActive ? "bg-primary/15 text-primary" : "bg-accent text-accent-foreground"}`}>
+                  {activeCounts[tab.type]}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Tab actions */}
+        <div className="mb-4 flex items-center justify-between">
+          <span className="text-sm text-muted-foreground">
+            Exibindo {displayList.length} {showInactive ? "inativo(s)" : "ativo(s)"}
+          </span>
           <div className="flex items-center gap-3">
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setShowInactive((v) => !v)}
+              onClick={() => setShowInactiveByTab((prev) => ({ ...prev, [activeTab]: !prev[activeTab] }))}
               className="gap-2 text-sm"
             >
               {showInactive ? (
@@ -272,7 +347,7 @@ export default function Index() {
             {!showInactive && (
               <Button onClick={handleAdd} className="gap-2">
                 <UserPlus className="h-4 w-4" />
-                Adicionar Colaborador
+                {currentTabConfig.addLabel}
               </Button>
             )}
           </div>
@@ -287,10 +362,10 @@ export default function Index() {
             <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
               <Users className="mb-3 h-12 w-12 opacity-30" />
               <p className="text-lg font-medium">
-                {showInactive ? "Nenhum colaborador inativo" : "Nenhum colaborador cadastrado"}
+                {showInactive ? `Nenhum ${personTypeLabels[activeTab].toLowerCase()} inativo` : `Nenhum ${personTypeLabels[activeTab].toLowerCase()} cadastrado`}
               </p>
               {!showInactive && (
-                <p className="text-sm">Clique em "Adicionar Colaborador" para começar</p>
+                <p className="text-sm">Clique em "{currentTabConfig.addLabel}" para começar</p>
               )}
             </div>
           ) : (
@@ -404,17 +479,19 @@ export default function Index() {
         onSuccess={fetchColaboradores}
         editingId={editingId}
         initialData={editingData}
+        defaultPersonType={dialogType}
+        lockPersonType
       />
 
       {/* Deactivation Modal */}
       <Dialog open={!!deactivateTarget} onOpenChange={(open) => !open && setDeactivateTarget(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Desativar Colaborador</DialogTitle>
+            <DialogTitle className="text-xl font-bold">Desativar</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 pt-2">
             <p className="text-sm text-muted-foreground">
-              Colaborador: <span className="font-medium text-foreground">{deactivateTarget?.nome_completo}</span>
+              Nome: <span className="font-medium text-foreground">{deactivateTarget?.nome_completo}</span>
             </p>
             <div className="grid gap-2">
               <Label>Data de Demissão</Label>
@@ -503,11 +580,11 @@ export default function Index() {
       <Dialog open={!!reactivateTarget} onOpenChange={(open) => !open && setReactivateTarget(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Reativar Colaborador</DialogTitle>
+            <DialogTitle className="text-xl font-bold">Reativar</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 pt-2">
             <p className="text-sm text-muted-foreground">
-              Colaborador: <span className="font-medium text-foreground">{reactivateTarget?.nome_completo}</span>
+              Nome: <span className="font-medium text-foreground">{reactivateTarget?.nome_completo}</span>
             </p>
             <p className="text-sm text-muted-foreground">
               Os dados pessoais serão mantidos. Um novo período de trabalho será iniciado.
@@ -536,9 +613,9 @@ export default function Index() {
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir colaborador?</AlertDialogTitle>
+            <AlertDialogTitle>Excluir registro?</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja excluir permanentemente este colaborador? Esta ação não pode ser desfeita.
+              Tem certeza que deseja excluir permanentemente este registro? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
