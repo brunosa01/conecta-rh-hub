@@ -161,6 +161,51 @@ export type Database = {
         }
         Relationships: []
       }
+      evaluations: {
+        Row: {
+          created_at: string
+          cycle_number: number
+          evaluated_id: string
+          evaluated_name: string
+          evaluated_sector: string
+          evaluated_type: string
+          evaluation_date: string
+          evaluator_id: string
+          evaluator_name: string
+          id: string
+          notes: string | null
+          percentage_achieved: number
+        }
+        Insert: {
+          created_at?: string
+          cycle_number?: number
+          evaluated_id: string
+          evaluated_name: string
+          evaluated_sector: string
+          evaluated_type?: string
+          evaluation_date: string
+          evaluator_id: string
+          evaluator_name: string
+          id?: string
+          notes?: string | null
+          percentage_achieved?: number
+        }
+        Update: {
+          created_at?: string
+          cycle_number?: number
+          evaluated_id?: string
+          evaluated_name?: string
+          evaluated_sector?: string
+          evaluated_type?: string
+          evaluation_date?: string
+          evaluator_id?: string
+          evaluator_name?: string
+          id?: string
+          notes?: string | null
+          percentage_achieved?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
