@@ -148,70 +148,81 @@ function dominant(profiles: Record<ProfileKey, number>): ProfileKey {
   return (Object.keys(profiles) as ProfileKey[]).reduce((a, b) => (profiles[a] >= profiles[b] ? a : b));
 }
 
-// Hexagon chart -- 2x2 honeycomb
-function HexChart({
+// Radar chart for behavioral profiles
+function RadarProfileChart({
   profiles,
   size = "md",
 }: {
   profiles: Record<ProfileKey, number>;
   size?: "sm" | "md" | "lg";
 }) {
-  const dim = size === "sm" ? 110 : size === "lg" ? 220 : 160;
-  const r = dim * 0.18; // hex radius
-  const w = Math.sqrt(3) * r;
-  const h = 2 * r;
-  // 2x2 with hex offset (point-top hexes)
-  // positions: TL, TR (offset down by 0), BL, BR
-  const cx1 = dim / 2 - w / 2 - 2;
-  const cx2 = dim / 2 + w / 2 + 2;
-  const cy1 = dim / 2 - h * 0.5;
-  const cy2 = dim / 2 + h * 0.5;
-  const layout: { key: ProfileKey; cx: number; cy: number }[] = [
-    { key: "analista", cx: cx1, cy: cy1 },
-    { key: "planejador", cx: cx2, cy: cy1 },
-    { key: "executor", cx: cx1, cy: cy2 },
-    { key: "comunicador", cx: cx2, cy: cy2 },
-  ];
+  const dim = size === "sm" ? 100 : size === "lg" ? 320 : 200;
+  const showLabels = size !== "sm";
+  const fontSize = size === "lg" ? 12 : 10;
 
-  function hexPoints(cx: number, cy: number, radius: number): string {
-    const pts: string[] = [];
-    for (let i = 0; i < 6; i++) {
-      const angle = (Math.PI / 3) * i - Math.PI / 2;
-      pts.push(`${cx + radius * Math.cos(angle)},${cy + radius * Math.sin(angle)}`);
-    }
-    return pts.join(" ");
-  }
-
-  function fillFor(pct: number, color: string): string {
-    if (pct === 0) return "transparent";
-    if (pct <= 33) return `${color}33`; // ~20%
-    if (pct <= 66) return `${color}99`; // ~60%
-    return color;
-  }
+  const data = PROFILES.map((p) => ({
+    profile: p.label,
+    value: profiles[p.key] || 0,
+    color: p.color,
+  }));
 
   return (
-    <svg width={dim} height={dim} viewBox={`0 0 ${dim} ${dim}`} className="shrink-0">
-      {layout.map(({ key, cx, cy }) => {
-        const pct = profiles[key] || 0;
-        const color = profileMap[key].color;
-        const fill = fillFor(pct, color);
-        const stroke = pct === 0 ? "#9CA3AF" : color;
-        const textColor = pct > 66 ? "#fff" : "#111827";
-        const fontSizeName = size === "sm" ? 7 : size === "lg" ? 12 : 9;
-        const fontSizePct = size === "sm" ? 11 : size === "lg" ? 22 : 16;
-        return (
-          <g key={key}>
-            <polygon points={hexPoints(cx, cy, r)} fill={fill} stroke={stroke} strokeWidth={1.5} />
-            <text x={cx} y={cy - 2} textAnchor="middle" fontSize={fontSizeName} fontWeight={700} fill={textColor}>
-              {profileMap[key].label}
-            </text>
-            <text x={cx} y={cy + fontSizePct * 0.7} textAnchor="middle" fontSize={fontSizePct} fontWeight={800} fill={textColor}>
-              {pct}%
-            </text>
-          </g>
-        );
-      })}
-    </svg>
+    <div style={{ width: dim, height: dim }} className="shrink-0">
+      <ResponsiveContainer width="100%" height="100%">
+        <RadarChart data={data} outerRadius="75%" margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
+          <PolarGrid stroke="#E5E7EB" gridType="polygon" />
+          <PolarAngleAxis
+            dataKey="profile"
+            tick={
+              showLabels
+                ? ({ payload, x, y, textAnchor }: any) => {
+                    const item = data.find((d) => d.profile === payload.value);
+                    return (
+                      <g>
+                        <text
+                          x={x}
+                          y={y}
+                          textAnchor={textAnchor}
+                          fontSize={fontSize}
+                          fontWeight={700}
+                          fill={item?.color || "#111827"}
+                        >
+                          {payload.value}
+                        </text>
+                        <text
+                          x={x}
+                          y={y + fontSize + 2}
+                          textAnchor={textAnchor}
+                          fontSize={fontSize - 1}
+                          fontWeight={600}
+                          fill="#374151"
+                        >
+                          {item?.value ?? 0}%
+                        </text>
+                      </g>
+                    );
+                  }
+                : false
+            }
+          />
+          <PolarRadiusAxis
+            angle={90}
+            domain={[0, 100]}
+            tick={false}
+            axisLine={false}
+            tickCount={5}
+          />
+          <Radar
+            dataKey="value"
+            stroke="#7C3AED"
+            strokeWidth={2}
+            fill="#7C3AED"
+            fillOpacity={0.3}
+            isAnimationActive={false}
+          />
+        </RadarChart>
+      </ResponsiveContainer>
+    </div>
   );
 }
 
