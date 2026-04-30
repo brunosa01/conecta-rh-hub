@@ -1,4 +1,4 @@
-import { Users, BarChart3, ClipboardCheck } from "lucide-react";
+import { Users, BarChart3, ClipboardCheck, Brain } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import logo from "@/assets/logo-conecta-ads.png";
