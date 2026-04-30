@@ -601,6 +601,23 @@ export default function MapeamentoComportamental() {
           </span>
         </div>
 
+        {historyFilter !== "all" && historyRows.length > 0 && (
+          <div className="mb-6 flex flex-col items-center justify-center rounded-lg border bg-muted/30 p-4">
+            <p className="text-sm font-medium text-muted-foreground mb-2">
+              Perfil mais recente — {historyRows[0].person_name} ({formatDate(historyRows[0].mapping_date)})
+            </p>
+            <RadarProfileChart
+              size="lg"
+              profiles={{
+                analista: Number(historyRows[0].analista),
+                planejador: Number(historyRows[0].planejador),
+                executor: Number(historyRows[0].executor),
+                comunicador: Number(historyRows[0].comunicador),
+              }}
+            />
+          </div>
+        )}
+
         {historyRows.length === 0 ? (
           <p className="text-sm text-muted-foreground py-6 text-center">Nenhum mapeamento registrado ainda.</p>
         ) : (
