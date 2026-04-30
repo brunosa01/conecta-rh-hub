@@ -50,6 +50,57 @@ export type Database = {
         }
         Relationships: []
       }
+      behavioral_mappings: {
+        Row: {
+          analista: number
+          comunicador: number
+          created_at: string
+          cycle_number: number
+          dominant_profile: string
+          executor: number
+          id: string
+          mapping_date: string
+          notes: string | null
+          person_id: string
+          person_name: string
+          person_sector: string
+          person_type: string
+          planejador: number
+        }
+        Insert: {
+          analista?: number
+          comunicador?: number
+          created_at?: string
+          cycle_number?: number
+          dominant_profile?: string
+          executor?: number
+          id?: string
+          mapping_date: string
+          notes?: string | null
+          person_id: string
+          person_name: string
+          person_sector: string
+          person_type?: string
+          planejador?: number
+        }
+        Update: {
+          analista?: number
+          comunicador?: number
+          created_at?: string
+          cycle_number?: number
+          dominant_profile?: string
+          executor?: number
+          id?: string
+          mapping_date?: string
+          notes?: string | null
+          person_id?: string
+          person_name?: string
+          person_sector?: string
+          person_type?: string
+          planejador?: number
+        }
+        Relationships: []
+      }
       colaboradores: {
         Row: {
           cargo: string
