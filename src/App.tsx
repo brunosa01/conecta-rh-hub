@@ -7,6 +7,7 @@ import { AppLayout } from "@/components/AppLayout";
 import Index from "./pages/Index.tsx";
 import Indicadores from "./pages/Indicadores.tsx";
 import AvaliacaoDesempenho from "./pages/AvaliacaoDesempenho.tsx";
+import MapeamentoComportamental from "./pages/MapeamentoComportamental.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
