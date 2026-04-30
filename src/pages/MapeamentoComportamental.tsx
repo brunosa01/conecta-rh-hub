@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Brain, History, Pencil, Trash2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from "recharts";
 
 type EmploymentPeriod = {
   admissionDate: string;
