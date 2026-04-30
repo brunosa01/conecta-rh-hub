@@ -773,7 +773,7 @@ export default function MapeamentoComportamental() {
             </div>
 
             <div className="flex justify-center py-2">
-              <HexChart
+              <RadarProfileChart
                 size="md"
                 profiles={{
                   analista: formAnalista,
