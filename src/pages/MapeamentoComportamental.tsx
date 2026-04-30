@@ -636,7 +636,7 @@ export default function MapeamentoComportamental() {
                     <TableCell>{Number(m.comunicador)}%</TableCell>
                     <TableCell><ProfileBadge profile={m.dominant_profile} /></TableCell>
                     <TableCell>
-                      <HexChart
+                      <RadarProfileChart
                         size="sm"
                         profiles={{
                           analista: Number(m.analista),
