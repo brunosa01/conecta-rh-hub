@@ -20,6 +20,7 @@ const items = [
   { title: "Colaboradores", url: "/", icon: Users },
   { title: "Indicadores", url: "/indicadores", icon: BarChart3 },
   { title: "Avaliação de Desempenho", url: "/avaliacao-desempenho", icon: ClipboardCheck },
+  { title: "Mapeamento Comportamental", url: "/mapeamento-comportamental", icon: Brain },
 ];
 
 export function AppSidebar() {
