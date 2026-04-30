@@ -1,4 +1,4 @@
-import { Users, BarChart3, ClipboardCheck } from "lucide-react";
+import { Users, BarChart3, ClipboardCheck, Brain } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import logo from "@/assets/logo-conecta-ads.png";
@@ -20,6 +20,7 @@ const items = [
   { title: "Colaboradores", url: "/", icon: Users },
   { title: "Indicadores", url: "/indicadores", icon: BarChart3 },
   { title: "Avaliação de Desempenho", url: "/avaliacao-desempenho", icon: ClipboardCheck },
+  { title: "Mapeamento Comportamental", url: "/mapeamento-comportamental", icon: Brain },
 ];
 
 export function AppSidebar() {

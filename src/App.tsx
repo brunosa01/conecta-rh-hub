@@ -7,6 +7,7 @@ import { AppLayout } from "@/components/AppLayout";
 import Index from "./pages/Index.tsx";
 import Indicadores from "./pages/Indicadores.tsx";
 import AvaliacaoDesempenho from "./pages/AvaliacaoDesempenho.tsx";
+import MapeamentoComportamental from "./pages/MapeamentoComportamental.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/indicadores" element={<Indicadores />} />
             <Route path="/avaliacao-desempenho" element={<AvaliacaoDesempenho />} />
+            <Route path="/mapeamento-comportamental" element={<MapeamentoComportamental />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
