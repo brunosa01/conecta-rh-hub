@@ -508,7 +508,7 @@ export default function Index() {
       <Dialog open={!!deactivateTarget} onOpenChange={(open) => !open && setDeactivateTarget(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Desativar</DialogTitle>
+            <DialogTitle className="text-xl font-bold">Desativar {deactivateTarget ? personTypeFullLabels[(deactivateTarget.person_type || "colaborador") as PersonType] : "Colaborador(a)"}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 pt-2">
             <p className="text-sm text-muted-foreground">
@@ -601,7 +601,7 @@ export default function Index() {
       <Dialog open={!!reactivateTarget} onOpenChange={(open) => !open && setReactivateTarget(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Reativar</DialogTitle>
+            <DialogTitle className="text-xl font-bold">Reativar {reactivateTarget ? personTypeFullLabels[(reactivateTarget.person_type || "colaborador") as PersonType] : "Colaborador(a)"}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 pt-2">
             <p className="text-sm text-muted-foreground">
