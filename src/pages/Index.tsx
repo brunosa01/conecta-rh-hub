@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ColaboradorDialog, ColaboradorForm, PersonType, personTypeLabels } from "@/components/AddColaboradorDialog";
+import { ColaboradorDialog, ColaboradorForm, PersonType } from "@/components/AddColaboradorDialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { calculateAge, personTypeAddLabels, personTypeFullLabels, personTypePluralLabels } from "@/lib/personHelpers";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -28,6 +30,8 @@ type Colaborador = {
   setor: string;
   cargo: string;
   data_admissao: string;
+  data_nascimento: string;
+  email: string | null;
   idade: number;
   escolaridade: string;
   status: string;
@@ -57,9 +61,9 @@ function formatDate(dateStr: string): string {
 }
 
 const TABS: { type: PersonType; label: string; addLabel: string; icon: typeof User }[] = [
-  { type: "colaborador", label: "Colaboradores", addLabel: "Adicionar Colaborador", icon: User },
-  { type: "socio", label: "Sócios", addLabel: "Adicionar Sócio", icon: Briefcase },
-  { type: "prestador", label: "Prestadores de Serviço", addLabel: "Adicionar Prestador", icon: Wrench },
+  { type: "colaborador", label: "Colaboradores(as)", addLabel: personTypeAddLabels.colaborador, icon: User },
+  { type: "socio", label: "Sócios(as)", addLabel: personTypeAddLabels.socio, icon: Briefcase },
+  { type: "prestador", label: "Prestadores(as) de Serviço", addLabel: personTypeAddLabels.prestador, icon: Wrench },
 ];
 
 export default function Index() {
@@ -129,7 +133,8 @@ export default function Index() {
       setor: c.setor,
       cargo: c.cargo,
       data_admissao: c.data_admissao,
-      idade: String(c.idade),
+      data_nascimento: c.data_nascimento || "",
+      email: c.email || "",
       escolaridade: c.escolaridade,
       person_type: (c.person_type || "colaborador") as PersonType,
     });
@@ -278,15 +283,15 @@ export default function Index() {
         {/* Summary pills */}
         <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div className="rounded-lg border border-border bg-card px-4 py-3 shadow-sm">
-            <p className="text-xs text-muted-foreground">Colaboradores Ativos</p>
+            <p className="text-xs text-muted-foreground">Colaboradores(as) Ativos</p>
             <p className="text-xl font-bold text-foreground">{activeCounts.colaborador}</p>
           </div>
           <div className="rounded-lg border border-border bg-card px-4 py-3 shadow-sm">
-            <p className="text-xs text-muted-foreground">Sócios Ativos</p>
+            <p className="text-xs text-muted-foreground">Sócios(as) Ativos</p>
             <p className="text-xl font-bold text-foreground">{activeCounts.socio}</p>
           </div>
           <div className="rounded-lg border border-border bg-card px-4 py-3 shadow-sm">
-            <p className="text-xs text-muted-foreground">Prestadores Ativos</p>
+            <p className="text-xs text-muted-foreground">Prestadores(as) Ativos</p>
             <p className="text-xl font-bold text-foreground">{activeCounts.prestador}</p>
           </div>
           <div className="rounded-lg border border-primary/40 bg-primary/5 px-4 py-3 shadow-sm">
@@ -362,24 +367,26 @@ export default function Index() {
             <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
               <Users className="mb-3 h-12 w-12 opacity-30" />
               <p className="text-lg font-medium">
-                {showInactive ? `Nenhum ${personTypeLabels[activeTab].toLowerCase()} inativo` : `Nenhum ${personTypeLabels[activeTab].toLowerCase()} cadastrado`}
+                {showInactive ? `Nenhum(a) ${personTypeFullLabels[activeTab].toLowerCase()} inativo(a)` : `Nenhum(a) ${personTypeFullLabels[activeTab].toLowerCase()} cadastrado(a)`}
               </p>
               {!showInactive && (
                 <p className="text-sm">Clique em "{currentTabConfig.addLabel}" para começar</p>
               )}
             </div>
           ) : (
+            <TooltipProvider>
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Nome</TableHead>
-                  <TableHead>Documento</TableHead>
+                  <TableHead>CPF/CNPJ</TableHead>
                   <TableHead>Sexo</TableHead>
                   <TableHead>Gênero</TableHead>
                   <TableHead>Setor</TableHead>
                   <TableHead>Cargo</TableHead>
                   <TableHead>Admissão</TableHead>
                   <TableHead>Idade</TableHead>
+                  <TableHead>E-mail</TableHead>
                   <TableHead>Escolaridade</TableHead>
                   {showInactive && <TableHead>Demissão</TableHead>}
                   {showInactive && <TableHead>Motivo</TableHead>}
@@ -390,6 +397,7 @@ export default function Index() {
               <TableBody>
                 {displayList.map((c) => {
                   const lastDismissal = showInactive ? getLastDismissal(c) : null;
+                  const ageDisplay = c.data_nascimento ? calculateAge(c.data_nascimento) : c.idade;
                   return (
                     <TableRow key={c.id}>
                       <TableCell className="font-medium">{c.nome_completo}</TableCell>
@@ -399,7 +407,19 @@ export default function Index() {
                       <TableCell>{c.setor}</TableCell>
                       <TableCell>{c.cargo}</TableCell>
                       <TableCell>{formatDate(c.data_admissao)}</TableCell>
-                      <TableCell>{c.idade}</TableCell>
+                      <TableCell>{ageDisplay} anos</TableCell>
+                      <TableCell className="max-w-[180px]">
+                        {c.email ? (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="block truncate">{c.email}</span>
+                            </TooltipTrigger>
+                            <TooltipContent>{c.email}</TooltipContent>
+                          </Tooltip>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
                       <TableCell>{c.escolaridade}</TableCell>
                       {showInactive && (
                         <TableCell>
@@ -468,6 +488,7 @@ export default function Index() {
                 })}
               </TableBody>
             </Table>
+            </TooltipProvider>
           )}
         </div>
       </main>
@@ -487,7 +508,7 @@ export default function Index() {
       <Dialog open={!!deactivateTarget} onOpenChange={(open) => !open && setDeactivateTarget(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Desativar</DialogTitle>
+            <DialogTitle className="text-xl font-bold">Desativar {deactivateTarget ? personTypeFullLabels[(deactivateTarget.person_type || "colaborador") as PersonType] : "Colaborador(a)"}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 pt-2">
             <p className="text-sm text-muted-foreground">
@@ -580,7 +601,7 @@ export default function Index() {
       <Dialog open={!!reactivateTarget} onOpenChange={(open) => !open && setReactivateTarget(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Reativar</DialogTitle>
+            <DialogTitle className="text-xl font-bold">Reativar {reactivateTarget ? personTypeFullLabels[(reactivateTarget.person_type || "colaborador") as PersonType] : "Colaborador(a)"}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 pt-2">
             <p className="text-sm text-muted-foreground">

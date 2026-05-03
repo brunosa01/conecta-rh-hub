@@ -106,7 +106,9 @@ export type Database = {
           cargo: string
           created_at: string
           data_admissao: string
+          data_nascimento: string
           documento: string
+          email: string | null
           employment_periods: Json
           escolaridade: string
           genero: string
@@ -122,7 +124,9 @@ export type Database = {
           cargo: string
           created_at?: string
           data_admissao: string
+          data_nascimento: string
           documento: string
+          email?: string | null
           employment_periods?: Json
           escolaridade?: string
           genero: string
@@ -138,7 +142,9 @@ export type Database = {
           cargo?: string
           created_at?: string
           data_admissao?: string
+          data_nascimento?: string
           documento?: string
+          email?: string | null
           employment_periods?: Json
           escolaridade?: string
           genero?: string
@@ -254,6 +260,24 @@ export type Database = {
           id?: string
           notes?: string | null
           percentage_achieved?: number
+        }
+        Relationships: []
+      }
+      sectors: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
         }
         Relationships: []
       }
