@@ -30,6 +30,8 @@ type Colaborador = {
   setor: string;
   cargo: string;
   data_admissao: string;
+  data_nascimento: string;
+  email: string | null;
   idade: number;
   escolaridade: string;
   status: string;
@@ -59,9 +61,9 @@ function formatDate(dateStr: string): string {
 }
 
 const TABS: { type: PersonType; label: string; addLabel: string; icon: typeof User }[] = [
-  { type: "colaborador", label: "Colaboradores", addLabel: "Adicionar Colaborador", icon: User },
-  { type: "socio", label: "Sócios", addLabel: "Adicionar Sócio", icon: Briefcase },
-  { type: "prestador", label: "Prestadores de Serviço", addLabel: "Adicionar Prestador", icon: Wrench },
+  { type: "colaborador", label: "Colaboradores(as)", addLabel: personTypeAddLabels.colaborador, icon: User },
+  { type: "socio", label: "Sócios(as)", addLabel: personTypeAddLabels.socio, icon: Briefcase },
+  { type: "prestador", label: "Prestadores(as) de Serviço", addLabel: personTypeAddLabels.prestador, icon: Wrench },
 ];
 
 export default function Index() {
@@ -131,7 +133,8 @@ export default function Index() {
       setor: c.setor,
       cargo: c.cargo,
       data_admissao: c.data_admissao,
-      idade: String(c.idade),
+      data_nascimento: c.data_nascimento || "",
+      email: c.email || "",
       escolaridade: c.escolaridade,
       person_type: (c.person_type || "colaborador") as PersonType,
     });
