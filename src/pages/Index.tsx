@@ -374,17 +374,19 @@ export default function Index() {
               )}
             </div>
           ) : (
+            <TooltipProvider>
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Nome</TableHead>
-                  <TableHead>Documento</TableHead>
+                  <TableHead>CPF/CNPJ</TableHead>
                   <TableHead>Sexo</TableHead>
                   <TableHead>Gênero</TableHead>
                   <TableHead>Setor</TableHead>
                   <TableHead>Cargo</TableHead>
                   <TableHead>Admissão</TableHead>
                   <TableHead>Idade</TableHead>
+                  <TableHead>E-mail</TableHead>
                   <TableHead>Escolaridade</TableHead>
                   {showInactive && <TableHead>Demissão</TableHead>}
                   {showInactive && <TableHead>Motivo</TableHead>}
@@ -395,6 +397,7 @@ export default function Index() {
               <TableBody>
                 {displayList.map((c) => {
                   const lastDismissal = showInactive ? getLastDismissal(c) : null;
+                  const ageDisplay = c.data_nascimento ? calculateAge(c.data_nascimento) : c.idade;
                   return (
                     <TableRow key={c.id}>
                       <TableCell className="font-medium">{c.nome_completo}</TableCell>
@@ -404,7 +407,19 @@ export default function Index() {
                       <TableCell>{c.setor}</TableCell>
                       <TableCell>{c.cargo}</TableCell>
                       <TableCell>{formatDate(c.data_admissao)}</TableCell>
-                      <TableCell>{c.idade}</TableCell>
+                      <TableCell>{ageDisplay} anos</TableCell>
+                      <TableCell className="max-w-[180px]">
+                        {c.email ? (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="block truncate">{c.email}</span>
+                            </TooltipTrigger>
+                            <TooltipContent>{c.email}</TooltipContent>
+                          </Tooltip>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
                       <TableCell>{c.escolaridade}</TableCell>
                       {showInactive && (
                         <TableCell>
