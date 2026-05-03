@@ -488,6 +488,7 @@ export default function Index() {
                 })}
               </TableBody>
             </Table>
+            </TooltipProvider>
           )}
         </div>
       </main>
