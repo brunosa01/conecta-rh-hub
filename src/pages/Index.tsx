@@ -283,15 +283,15 @@ export default function Index() {
         {/* Summary pills */}
         <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div className="rounded-lg border border-border bg-card px-4 py-3 shadow-sm">
-            <p className="text-xs text-muted-foreground">Colaboradores Ativos</p>
+            <p className="text-xs text-muted-foreground">Colaboradores(as) Ativos</p>
             <p className="text-xl font-bold text-foreground">{activeCounts.colaborador}</p>
           </div>
           <div className="rounded-lg border border-border bg-card px-4 py-3 shadow-sm">
-            <p className="text-xs text-muted-foreground">Sócios Ativos</p>
+            <p className="text-xs text-muted-foreground">Sócios(as) Ativos</p>
             <p className="text-xl font-bold text-foreground">{activeCounts.socio}</p>
           </div>
           <div className="rounded-lg border border-border bg-card px-4 py-3 shadow-sm">
-            <p className="text-xs text-muted-foreground">Prestadores Ativos</p>
+            <p className="text-xs text-muted-foreground">Prestadores(as) Ativos</p>
             <p className="text-xl font-bold text-foreground">{activeCounts.prestador}</p>
           </div>
           <div className="rounded-lg border border-primary/40 bg-primary/5 px-4 py-3 shadow-sm">
@@ -367,7 +367,7 @@ export default function Index() {
             <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
               <Users className="mb-3 h-12 w-12 opacity-30" />
               <p className="text-lg font-medium">
-                {showInactive ? `Nenhum ${personTypeLabels[activeTab].toLowerCase()} inativo` : `Nenhum ${personTypeLabels[activeTab].toLowerCase()} cadastrado`}
+                {showInactive ? `Nenhum(a) ${personTypeFullLabels[activeTab].toLowerCase()} inativo(a)` : `Nenhum(a) ${personTypeFullLabels[activeTab].toLowerCase()} cadastrado(a)`}
               </p>
               {!showInactive && (
                 <p className="text-sm">Clique em "{currentTabConfig.addLabel}" para começar</p>
