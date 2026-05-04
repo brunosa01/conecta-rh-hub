@@ -1,0 +1,1 @@
+ALTER TABLE public.enpssurveys ADD COLUMN IF NOT EXISTS survey_name TEXT NOT NULL DEFAULT '';

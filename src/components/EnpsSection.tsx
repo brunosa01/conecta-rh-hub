@@ -25,6 +25,7 @@ type Survey = {
   month: number;
   year: number;
   label: string;
+  survey_name: string;
   votes: Record<string, number>;
   total_responses: number;
   active_collaborators_at_time: number;
@@ -99,6 +100,7 @@ export default function EnpsSection({ activeCount }: Props) {
   const now = new Date();
   const [formMonth, setFormMonth] = useState<number>(now.getMonth() + 1);
   const [formYear, setFormYear] = useState<number>(now.getFullYear());
+  const [formSurveyName, setFormSurveyName] = useState<string>("");
   const [formVotes, setFormVotes] = useState<Record<string, number>>(
     Object.fromEntries(SCORES.map((s) => [String(s), 0])),
   );
@@ -133,6 +135,7 @@ export default function EnpsSection({ activeCount }: Props) {
     setEditing(null);
     setFormMonth(now.getMonth() + 1);
     setFormYear(now.getFullYear());
+    setFormSurveyName("");
     setFormVotes(Object.fromEntries(SCORES.map((s) => [String(s), 0])));
     setModalOpen(true);
   };
@@ -141,6 +144,7 @@ export default function EnpsSection({ activeCount }: Props) {
     setEditing(s);
     setFormMonth(s.month);
     setFormYear(s.year);
+    setFormSurveyName(s.survey_name || "");
     setFormVotes({ ...Object.fromEntries(SCORES.map((sc) => [String(sc), 0])), ...s.votes });
     setModalOpen(true);
   };
@@ -154,7 +158,20 @@ export default function EnpsSection({ activeCount }: Props) {
     (s) => s.month === formMonth && s.year === formYear && s.id !== editing?.id,
   );
 
-  const canSave = formMetrics.total > 0 && !isDuplicatePeriod;
+  const trimmedName = formSurveyName.trim();
+  const isDuplicateName = surveys.some(
+    (s) =>
+      (s.survey_name || "").trim().toLowerCase() === trimmedName.toLowerCase() &&
+      trimmedName.length > 0 &&
+      s.id !== editing?.id,
+  );
+
+  const canSave =
+    formMetrics.total > 0 &&
+    !isDuplicatePeriod &&
+    !isDuplicateName &&
+    trimmedName.length > 0 &&
+    trimmedName.length <= 100;
 
   const handleSave = async () => {
     if (!canSave) return;
@@ -162,6 +179,7 @@ export default function EnpsSection({ activeCount }: Props) {
       month: formMonth,
       year: formYear,
       label: buildLabel(formMonth, formYear),
+      survey_name: trimmedName,
       votes: formVotes,
       total_responses: formMetrics.total,
       active_collaborators_at_time: editing ? editing.active_collaborators_at_time : activeCount,
@@ -211,8 +229,12 @@ export default function EnpsSection({ activeCount }: Props) {
 
   const evolutionData = sortedSurveys.map((s) => {
     const m = computeMetrics(s.votes, s.active_collaborators_at_time);
+    const fullName = s.survey_name || s.label;
+    const shortName = fullName.length > 15 ? fullName.slice(0, 15) + "…" : fullName;
     return {
-      label: s.label,
+      label: shortName,
+      fullName,
+      period: s.label,
       enps: Number(m.enps.toFixed(1)),
       media: Number(m.avg.toFixed(2)),
       aderencia: Number(m.adherence.toFixed(1)),
@@ -250,7 +272,10 @@ export default function EnpsSection({ activeCount }: Props) {
                   {formatSigned(lastMetrics!.enps, 1)}
                 </p>
                 <p className="text-sm font-medium" style={{ color: lastClass!.color }}>{lastClass!.label}</p>
-                <p className="mt-2 text-xs text-muted-foreground">{lastSurvey!.label}</p>
+                <p className="mt-2 text-xs font-medium text-foreground">{lastSurvey!.survey_name || lastSurvey!.label}</p>
+                {lastSurvey!.survey_name ? (
+                  <p className="text-[11px] text-muted-foreground">{lastSurvey!.label}</p>
+                ) : null}
               </div>
               {/* Média */}
               <div className="rounded-xl border-l-4 border-l-primary border border-border bg-card p-5 shadow-sm">
@@ -349,7 +374,7 @@ export default function EnpsSection({ activeCount }: Props) {
                     labelFormatter={(label, payload) => {
                       const p: any = payload?.[0]?.payload;
                       if (!p) return label;
-                      return `${label} · Aderência ${formatBR(p.aderencia, 1)}% · ${p.respostas} respostas`;
+                      return `${p.fullName} · ${p.period} · Aderência ${formatBR(p.aderencia, 1)}% · ${p.respostas} respostas`;
                     }}
                   />
                   <Legend />
@@ -377,6 +402,7 @@ export default function EnpsSection({ activeCount }: Props) {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead>Nome da Pesquisa</TableHead>
                         <TableHead>Período</TableHead>
                         <TableHead>Respostas</TableHead>
                         <TableHead>Aderência</TableHead>
@@ -394,7 +420,8 @@ export default function EnpsSection({ activeCount }: Props) {
                         const c = classifyEnps(m.enps);
                         return (
                           <TableRow key={s.id}>
-                            <TableCell className="font-medium">{s.label}</TableCell>
+                            <TableCell className="font-medium">{s.survey_name || "—"}</TableCell>
+                            <TableCell>{s.label}</TableCell>
                             <TableCell>{m.total}</TableCell>
                             <TableCell>{formatBR(m.adherence, 1)}%</TableCell>
                             <TableCell>{m.det} ({formatBR(m.pctDet, 1)}%)</TableCell>
@@ -433,6 +460,21 @@ export default function EnpsSection({ activeCount }: Props) {
           </DialogHeader>
 
           <div className="space-y-4">
+            <div>
+              <Label className="mb-2 block">Nome da Pesquisa</Label>
+              <Input
+                value={formSurveyName}
+                onChange={(e) => setFormSurveyName(e.target.value.slice(0, 100))}
+                placeholder="Ex: 1º Trimestre 2026, Pesquisa Semestral..."
+                maxLength={100}
+              />
+              <div className="mt-1 flex items-center justify-between">
+                {isDuplicateName ? (
+                  <p className="text-xs text-destructive">Já existe uma pesquisa com este nome</p>
+                ) : <span />}
+                <p className="text-xs text-muted-foreground">{formSurveyName.length}/100</p>
+              </div>
+            </div>
             <div>
               <Label className="mb-2 block">Mês/Ano</Label>
               <div className="grid grid-cols-2 gap-3">
