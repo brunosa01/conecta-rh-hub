@@ -158,7 +158,20 @@ export default function EnpsSection({ activeCount }: Props) {
     (s) => s.month === formMonth && s.year === formYear && s.id !== editing?.id,
   );
 
-  const canSave = formMetrics.total > 0 && !isDuplicatePeriod;
+  const trimmedName = formSurveyName.trim();
+  const isDuplicateName = surveys.some(
+    (s) =>
+      (s.survey_name || "").trim().toLowerCase() === trimmedName.toLowerCase() &&
+      trimmedName.length > 0 &&
+      s.id !== editing?.id,
+  );
+
+  const canSave =
+    formMetrics.total > 0 &&
+    !isDuplicatePeriod &&
+    !isDuplicateName &&
+    trimmedName.length > 0 &&
+    trimmedName.length <= 100;
 
   const handleSave = async () => {
     if (!canSave) return;
@@ -166,6 +179,7 @@ export default function EnpsSection({ activeCount }: Props) {
       month: formMonth,
       year: formYear,
       label: buildLabel(formMonth, formYear),
+      survey_name: trimmedName,
       votes: formVotes,
       total_responses: formMetrics.total,
       active_collaborators_at_time: editing ? editing.active_collaborators_at_time : activeCount,
