@@ -420,7 +420,8 @@ export default function EnpsSection({ activeCount }: Props) {
                         const c = classifyEnps(m.enps);
                         return (
                           <TableRow key={s.id}>
-                            <TableCell className="font-medium">{s.label}</TableCell>
+                            <TableCell className="font-medium">{s.survey_name || "—"}</TableCell>
+                            <TableCell>{s.label}</TableCell>
                             <TableCell>{m.total}</TableCell>
                             <TableCell>{formatBR(m.adherence, 1)}%</TableCell>
                             <TableCell>{m.det} ({formatBR(m.pctDet, 1)}%)</TableCell>
