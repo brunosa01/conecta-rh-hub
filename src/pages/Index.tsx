@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UserPlus, Users, Pencil, ToggleLeft, ToggleRight, RotateCcw, Trash2, Plus, Briefcase, Wrench, User } from "lucide-react";
+import { UserPlus, Users, Pencil, ToggleLeft, ToggleRight, RotateCcw, Trash2, Plus, Briefcase, Wrench, User, Search, X, ArrowUp, ArrowDown } from "lucide-react";
 import { toast } from "sonner";
 
 // All person types (colaborador, socio, prestador) are included equally in all indicators
