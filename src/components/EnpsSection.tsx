@@ -268,7 +268,10 @@ export default function EnpsSection({ activeCount }: Props) {
                   {formatSigned(lastMetrics!.enps, 1)}
                 </p>
                 <p className="text-sm font-medium" style={{ color: lastClass!.color }}>{lastClass!.label}</p>
-                <p className="mt-2 text-xs text-muted-foreground">{lastSurvey!.label}</p>
+                <p className="mt-2 text-xs font-medium text-foreground">{lastSurvey!.survey_name || lastSurvey!.label}</p>
+                {lastSurvey!.survey_name ? (
+                  <p className="text-[11px] text-muted-foreground">{lastSurvey!.label}</p>
+                ) : null}
               </div>
               {/* Média */}
               <div className="rounded-xl border-l-4 border-l-primary border border-border bg-card p-5 shadow-sm">
