@@ -434,6 +434,29 @@ export default function Index() {
           </div>
         </div>
 
+        {/* Search bar */}
+        <div className="mb-4">
+          <div className="relative max-w-md">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={searchTerm}
+              onChange={(e) => setSearchByView((prev) => ({ ...prev, [viewKey]: e.target.value }))}
+              placeholder="Buscar por nome, setor ou cargo..."
+              className="pl-9 pr-9"
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => setSearchByView((prev) => ({ ...prev, [viewKey]: "" }))}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+                aria-label="Limpar busca"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </div>
+
         <div className="rounded-xl border border-border bg-card shadow-sm">
           {loading ? (
             <div className="flex items-center justify-center py-20 text-muted-foreground">
@@ -442,11 +465,19 @@ export default function Index() {
           ) : displayList.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
               <Users className="mb-3 h-12 w-12 opacity-30" />
-              <p className="text-lg font-medium">
-                {showInactive ? `Nenhum(a) ${personTypeFullLabels[activeTab].toLowerCase()} inativo(a)` : `Nenhum(a) ${personTypeFullLabels[activeTab].toLowerCase()} cadastrado(a)`}
-              </p>
-              {!showInactive && (
-                <p className="text-sm">Clique em "{currentTabConfig.addLabel}" para começar</p>
+              {searchTerm.trim().length >= 1 ? (
+                <p className="text-lg font-medium">
+                  Nenhum resultado encontrado para "{searchTerm}"
+                </p>
+              ) : (
+                <>
+                  <p className="text-lg font-medium">
+                    {showInactive ? `Nenhum(a) ${personTypeFullLabels[activeTab].toLowerCase()} inativo(a)` : `Nenhum(a) ${personTypeFullLabels[activeTab].toLowerCase()} cadastrado(a)`}
+                  </p>
+                  {!showInactive && (
+                    <p className="text-sm">Clique em "{currentTabConfig.addLabel}" para começar</p>
+                  )}
+                </>
               )}
             </div>
           ) : (
@@ -454,14 +485,24 @@ export default function Index() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Nome</TableHead>
+                  <TableHead onClick={() => handleSort("nome")} className="cursor-pointer select-none hover:text-foreground">
+                    Nome{sortIndicator("nome")}
+                  </TableHead>
                   <TableHead>CPF/CNPJ</TableHead>
                   <TableHead>Sexo</TableHead>
                   <TableHead>Gênero</TableHead>
-                  <TableHead>Setor</TableHead>
-                  <TableHead>Cargo</TableHead>
-                  <TableHead>Admissão</TableHead>
-                  <TableHead>Idade</TableHead>
+                  <TableHead onClick={() => handleSort("setor")} className="cursor-pointer select-none hover:text-foreground">
+                    Setor{sortIndicator("setor")}
+                  </TableHead>
+                  <TableHead onClick={() => handleSort("cargo")} className="cursor-pointer select-none hover:text-foreground">
+                    Cargo{sortIndicator("cargo")}
+                  </TableHead>
+                  <TableHead onClick={() => handleSort("admissao")} className="cursor-pointer select-none hover:text-foreground">
+                    Admissão{sortIndicator("admissao")}
+                  </TableHead>
+                  <TableHead onClick={() => handleSort("idade")} className="cursor-pointer select-none hover:text-foreground">
+                    Idade{sortIndicator("idade")}
+                  </TableHead>
                   <TableHead>E-mail</TableHead>
                   <TableHead>Escolaridade</TableHead>
                   {showInactive && <TableHead>Demissão</TableHead>}
