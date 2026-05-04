@@ -122,7 +122,75 @@ export default function Index() {
   const tabRecords = colaboradores.filter((c) => (c.person_type || "colaborador") === activeTab);
   const activeList = tabRecords.filter((c) => c.status === "active");
   const inactiveList = tabRecords.filter((c) => c.status === "inactive");
-  const displayList = showInactive ? inactiveList : activeList;
+  const baseList = showInactive ? inactiveList : activeList;
+
+  const viewKey: ViewKey = `${activeTab}_${showInactive ? "inactive" : "active"}`;
+  const searchTerm = searchByView[viewKey] || "";
+  const sortState = sortByView[viewKey] ?? null;
+
+  const normalize = (s: string) =>
+    (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+  const filteredList = (() => {
+    const q = normalize(searchTerm.trim());
+    if (q.length < 1) return baseList;
+    return baseList.filter((c) =>
+      normalize(c.nome_completo).includes(q) ||
+      normalize(c.setor).includes(q) ||
+      normalize(c.cargo).includes(q)
+    );
+  })();
+
+  const sortedList = (() => {
+    const arr = [...filteredList];
+    if (!sortState) {
+      // default: admission date descending (most recent first)
+      arr.sort((a, b) => (b.data_admissao || "").localeCompare(a.data_admissao || ""));
+      return arr;
+    }
+    const { field, dir } = sortState;
+    const mult = dir === "asc" ? 1 : -1;
+    arr.sort((a, b) => {
+      let av: string | number = "";
+      let bv: string | number = "";
+      switch (field) {
+        case "nome": av = normalize(a.nome_completo); bv = normalize(b.nome_completo); break;
+        case "setor": av = normalize(a.setor); bv = normalize(b.setor); break;
+        case "cargo": av = normalize(a.cargo); bv = normalize(b.cargo); break;
+        case "admissao": av = a.data_admissao || ""; bv = b.data_admissao || ""; break;
+        case "idade":
+          av = a.data_nascimento ? calculateAge(a.data_nascimento) : (a.idade || 0);
+          bv = b.data_nascimento ? calculateAge(b.data_nascimento) : (b.idade || 0);
+          break;
+      }
+      if (av < bv) return -1 * mult;
+      if (av > bv) return 1 * mult;
+      return 0;
+    });
+    return arr;
+  })();
+
+  const displayList = sortedList;
+
+  const handleSort = (field: SortField) => {
+    setSortByView((prev) => {
+      const cur = prev[viewKey] ?? null;
+      let next: SortState;
+      if (!cur || cur.field !== field) next = { field, dir: "asc" };
+      else if (cur.dir === "asc") next = { field, dir: "desc" };
+      else next = null; // third click → default
+      return { ...prev, [viewKey]: next };
+    });
+  };
+
+  const sortIndicator = (field: SortField) => {
+    if (!sortState || sortState.field !== field) return null;
+    return sortState.dir === "asc" ? (
+      <ArrowUp className="ml-1 inline h-3.5 w-3.5" />
+    ) : (
+      <ArrowDown className="ml-1 inline h-3.5 w-3.5" />
+    );
+  };
 
   const activeCounts: Record<PersonType, number> = {
     colaborador: colaboradores.filter((c) => (c.person_type || "colaborador") === "colaborador" && c.status === "active").length,
