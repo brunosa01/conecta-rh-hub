@@ -374,7 +374,7 @@ export default function EnpsSection({ activeCount }: Props) {
                     labelFormatter={(label, payload) => {
                       const p: any = payload?.[0]?.payload;
                       if (!p) return label;
-                      return `${label} · Aderência ${formatBR(p.aderencia, 1)}% · ${p.respostas} respostas`;
+                      return `${p.fullName} · ${p.period} · Aderência ${formatBR(p.aderencia, 1)}% · ${p.respostas} respostas`;
                     }}
                   />
                   <Legend />
