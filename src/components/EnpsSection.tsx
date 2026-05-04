@@ -461,6 +461,21 @@ export default function EnpsSection({ activeCount }: Props) {
 
           <div className="space-y-4">
             <div>
+              <Label className="mb-2 block">Nome da Pesquisa</Label>
+              <Input
+                value={formSurveyName}
+                onChange={(e) => setFormSurveyName(e.target.value.slice(0, 100))}
+                placeholder="Ex: 1º Trimestre 2026, Pesquisa Semestral..."
+                maxLength={100}
+              />
+              <div className="mt-1 flex items-center justify-between">
+                {isDuplicateName ? (
+                  <p className="text-xs text-destructive">Já existe uma pesquisa com este nome</p>
+                ) : <span />}
+                <p className="text-xs text-muted-foreground">{formSurveyName.length}/100</p>
+              </div>
+            </div>
+            <div>
               <Label className="mb-2 block">Mês/Ano</Label>
               <div className="grid grid-cols-2 gap-3">
                 <Select value={String(formMonth)} onValueChange={(v) => setFormMonth(Number(v))}>
