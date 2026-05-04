@@ -229,8 +229,12 @@ export default function EnpsSection({ activeCount }: Props) {
 
   const evolutionData = sortedSurveys.map((s) => {
     const m = computeMetrics(s.votes, s.active_collaborators_at_time);
+    const fullName = s.survey_name || s.label;
+    const shortName = fullName.length > 15 ? fullName.slice(0, 15) + "…" : fullName;
     return {
-      label: s.label,
+      label: shortName,
+      fullName,
+      period: s.label,
       enps: Number(m.enps.toFixed(1)),
       media: Number(m.avg.toFixed(2)),
       aderencia: Number(m.adherence.toFixed(1)),
