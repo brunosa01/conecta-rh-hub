@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { UserPlus, Users, Pencil, ToggleLeft, ToggleRight, RotateCcw, Trash2, Plus, Briefcase, Wrench, User } from "lucide-react";
+import { UserPlus, Users, Pencil, ToggleLeft, ToggleRight, RotateCcw, Trash2, Plus, Briefcase, Wrench, User, Search, X, ArrowUp, ArrowDown } from "lucide-react";
 import { toast } from "sonner";
 
 // All person types (colaborador, socio, prestador) are included equally in all indicators
@@ -80,6 +80,14 @@ export default function Index() {
   });
   const [dialogType, setDialogType] = useState<PersonType>("colaborador");
 
+  // Search & sort state — independent per tab and per active/inactive view
+  type SortField = "nome" | "setor" | "cargo" | "admissao" | "idade";
+  type SortDir = "asc" | "desc";
+  type SortState = { field: SortField; dir: SortDir } | null;
+  type ViewKey = `${PersonType}_${"active" | "inactive"}`;
+  const [searchByView, setSearchByView] = useState<Record<ViewKey, string>>({} as Record<ViewKey, string>);
+  const [sortByView, setSortByView] = useState<Record<ViewKey, SortState>>({} as Record<ViewKey, SortState>);
+
   // Deactivation state
   const [deactivateTarget, setDeactivateTarget] = useState<Colaborador | null>(null);
   const [deactivateDate, setDeactivateDate] = useState("");
@@ -114,7 +122,75 @@ export default function Index() {
   const tabRecords = colaboradores.filter((c) => (c.person_type || "colaborador") === activeTab);
   const activeList = tabRecords.filter((c) => c.status === "active");
   const inactiveList = tabRecords.filter((c) => c.status === "inactive");
-  const displayList = showInactive ? inactiveList : activeList;
+  const baseList = showInactive ? inactiveList : activeList;
+
+  const viewKey: ViewKey = `${activeTab}_${showInactive ? "inactive" : "active"}`;
+  const searchTerm = searchByView[viewKey] || "";
+  const sortState = sortByView[viewKey] ?? null;
+
+  const normalize = (s: string) =>
+    (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+  const filteredList = (() => {
+    const q = normalize(searchTerm.trim());
+    if (q.length < 1) return baseList;
+    return baseList.filter((c) =>
+      normalize(c.nome_completo).includes(q) ||
+      normalize(c.setor).includes(q) ||
+      normalize(c.cargo).includes(q)
+    );
+  })();
+
+  const sortedList = (() => {
+    const arr = [...filteredList];
+    if (!sortState) {
+      // default: admission date descending (most recent first)
+      arr.sort((a, b) => (b.data_admissao || "").localeCompare(a.data_admissao || ""));
+      return arr;
+    }
+    const { field, dir } = sortState;
+    const mult = dir === "asc" ? 1 : -1;
+    arr.sort((a, b) => {
+      let av: string | number = "";
+      let bv: string | number = "";
+      switch (field) {
+        case "nome": av = normalize(a.nome_completo); bv = normalize(b.nome_completo); break;
+        case "setor": av = normalize(a.setor); bv = normalize(b.setor); break;
+        case "cargo": av = normalize(a.cargo); bv = normalize(b.cargo); break;
+        case "admissao": av = a.data_admissao || ""; bv = b.data_admissao || ""; break;
+        case "idade":
+          av = a.data_nascimento ? calculateAge(a.data_nascimento) : (a.idade || 0);
+          bv = b.data_nascimento ? calculateAge(b.data_nascimento) : (b.idade || 0);
+          break;
+      }
+      if (av < bv) return -1 * mult;
+      if (av > bv) return 1 * mult;
+      return 0;
+    });
+    return arr;
+  })();
+
+  const displayList = sortedList;
+
+  const handleSort = (field: SortField) => {
+    setSortByView((prev) => {
+      const cur = prev[viewKey] ?? null;
+      let next: SortState;
+      if (!cur || cur.field !== field) next = { field, dir: "asc" };
+      else if (cur.dir === "asc") next = { field, dir: "desc" };
+      else next = null; // third click → default
+      return { ...prev, [viewKey]: next };
+    });
+  };
+
+  const sortIndicator = (field: SortField) => {
+    if (!sortState || sortState.field !== field) return null;
+    return sortState.dir === "asc" ? (
+      <ArrowUp className="ml-1 inline h-3.5 w-3.5" />
+    ) : (
+      <ArrowDown className="ml-1 inline h-3.5 w-3.5" />
+    );
+  };
 
   const activeCounts: Record<PersonType, number> = {
     colaborador: colaboradores.filter((c) => (c.person_type || "colaborador") === "colaborador" && c.status === "active").length,
@@ -358,6 +434,29 @@ export default function Index() {
           </div>
         </div>
 
+        {/* Search bar */}
+        <div className="mb-4">
+          <div className="relative max-w-md">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={searchTerm}
+              onChange={(e) => setSearchByView((prev) => ({ ...prev, [viewKey]: e.target.value }))}
+              placeholder="Buscar por nome, setor ou cargo..."
+              className="pl-9 pr-9"
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => setSearchByView((prev) => ({ ...prev, [viewKey]: "" }))}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+                aria-label="Limpar busca"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </div>
+
         <div className="rounded-xl border border-border bg-card shadow-sm">
           {loading ? (
             <div className="flex items-center justify-center py-20 text-muted-foreground">
@@ -366,11 +465,19 @@ export default function Index() {
           ) : displayList.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
               <Users className="mb-3 h-12 w-12 opacity-30" />
-              <p className="text-lg font-medium">
-                {showInactive ? `Nenhum(a) ${personTypeFullLabels[activeTab].toLowerCase()} inativo(a)` : `Nenhum(a) ${personTypeFullLabels[activeTab].toLowerCase()} cadastrado(a)`}
-              </p>
-              {!showInactive && (
-                <p className="text-sm">Clique em "{currentTabConfig.addLabel}" para começar</p>
+              {searchTerm.trim().length >= 1 ? (
+                <p className="text-lg font-medium">
+                  Nenhum resultado encontrado para "{searchTerm}"
+                </p>
+              ) : (
+                <>
+                  <p className="text-lg font-medium">
+                    {showInactive ? `Nenhum(a) ${personTypeFullLabels[activeTab].toLowerCase()} inativo(a)` : `Nenhum(a) ${personTypeFullLabels[activeTab].toLowerCase()} cadastrado(a)`}
+                  </p>
+                  {!showInactive && (
+                    <p className="text-sm">Clique em "{currentTabConfig.addLabel}" para começar</p>
+                  )}
+                </>
               )}
             </div>
           ) : (
@@ -378,14 +485,24 @@ export default function Index() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Nome</TableHead>
+                  <TableHead onClick={() => handleSort("nome")} className="cursor-pointer select-none hover:text-foreground">
+                    Nome{sortIndicator("nome")}
+                  </TableHead>
                   <TableHead>CPF/CNPJ</TableHead>
                   <TableHead>Sexo</TableHead>
                   <TableHead>Gênero</TableHead>
-                  <TableHead>Setor</TableHead>
-                  <TableHead>Cargo</TableHead>
-                  <TableHead>Admissão</TableHead>
-                  <TableHead>Idade</TableHead>
+                  <TableHead onClick={() => handleSort("setor")} className="cursor-pointer select-none hover:text-foreground">
+                    Setor{sortIndicator("setor")}
+                  </TableHead>
+                  <TableHead onClick={() => handleSort("cargo")} className="cursor-pointer select-none hover:text-foreground">
+                    Cargo{sortIndicator("cargo")}
+                  </TableHead>
+                  <TableHead onClick={() => handleSort("admissao")} className="cursor-pointer select-none hover:text-foreground">
+                    Admissão{sortIndicator("admissao")}
+                  </TableHead>
+                  <TableHead onClick={() => handleSort("idade")} className="cursor-pointer select-none hover:text-foreground">
+                    Idade{sortIndicator("idade")}
+                  </TableHead>
                   <TableHead>E-mail</TableHead>
                   <TableHead>Escolaridade</TableHead>
                   {showInactive && <TableHead>Demissão</TableHead>}
