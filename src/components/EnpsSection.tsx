@@ -25,6 +25,7 @@ type Survey = {
   month: number;
   year: number;
   label: string;
+  survey_name: string;
   votes: Record<string, number>;
   total_responses: number;
   active_collaborators_at_time: number;
