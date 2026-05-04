@@ -100,6 +100,7 @@ export default function EnpsSection({ activeCount }: Props) {
   const now = new Date();
   const [formMonth, setFormMonth] = useState<number>(now.getMonth() + 1);
   const [formYear, setFormYear] = useState<number>(now.getFullYear());
+  const [formSurveyName, setFormSurveyName] = useState<string>("");
   const [formVotes, setFormVotes] = useState<Record<string, number>>(
     Object.fromEntries(SCORES.map((s) => [String(s), 0])),
   );
