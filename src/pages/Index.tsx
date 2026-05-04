@@ -80,6 +80,14 @@ export default function Index() {
   });
   const [dialogType, setDialogType] = useState<PersonType>("colaborador");
 
+  // Search & sort state — independent per tab and per active/inactive view
+  type SortField = "nome" | "setor" | "cargo" | "admissao" | "idade";
+  type SortDir = "asc" | "desc";
+  type SortState = { field: SortField; dir: SortDir } | null;
+  type ViewKey = `${PersonType}_${"active" | "inactive"}`;
+  const [searchByView, setSearchByView] = useState<Record<ViewKey, string>>({} as Record<ViewKey, string>);
+  const [sortByView, setSortByView] = useState<Record<ViewKey, SortState>>({} as Record<ViewKey, SortState>);
+
   // Deactivation state
   const [deactivateTarget, setDeactivateTarget] = useState<Colaborador | null>(null);
   const [deactivateDate, setDeactivateDate] = useState("");
