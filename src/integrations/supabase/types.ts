@@ -192,6 +192,7 @@ export type Database = {
           id: string
           label: string
           month: number
+          survey_name: string
           total_responses: number
           votes: Json
           year: number
@@ -202,6 +203,7 @@ export type Database = {
           id?: string
           label: string
           month: number
+          survey_name?: string
           total_responses?: number
           votes?: Json
           year: number
@@ -212,6 +214,7 @@ export type Database = {
           id?: string
           label?: string
           month?: number
+          survey_name?: string
           total_responses?: number
           votes?: Json
           year?: number
