@@ -135,6 +135,7 @@ export default function EnpsSection({ activeCount }: Props) {
     setEditing(null);
     setFormMonth(now.getMonth() + 1);
     setFormYear(now.getFullYear());
+    setFormSurveyName("");
     setFormVotes(Object.fromEntries(SCORES.map((s) => [String(s), 0])));
     setModalOpen(true);
   };
@@ -143,6 +144,7 @@ export default function EnpsSection({ activeCount }: Props) {
     setEditing(s);
     setFormMonth(s.month);
     setFormYear(s.year);
+    setFormSurveyName(s.survey_name || "");
     setFormVotes({ ...Object.fromEntries(SCORES.map((sc) => [String(sc), 0])), ...s.votes });
     setModalOpen(true);
   };
