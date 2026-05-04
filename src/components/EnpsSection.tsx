@@ -402,6 +402,7 @@ export default function EnpsSection({ activeCount }: Props) {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead>Nome da Pesquisa</TableHead>
                         <TableHead>Período</TableHead>
                         <TableHead>Respostas</TableHead>
                         <TableHead>Aderência</TableHead>
